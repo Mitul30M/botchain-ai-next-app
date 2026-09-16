@@ -1,0 +1,142 @@
+// use prisma-next
+//
+// Ported from schema.py (SQLModel). Column names are pinned with @map to the
+// EXACT snake_case names schema.py uses, so when the FastAPI backend takes
+// over later, SQLAlchemy points at the same physical columns Prisma created
+// here — no rename migration needed on handoff.
+//
+// Enums (role/type/status/provider) are deliberately plain `String`, not
+// native Postgres enums — same reasoning as schema.py: avoids native-enum
+// migration friction, validated in application code instead.
+//
+// NOTE: Prisma 8 is a Release Candidate; verify anything below that looks
+// unusual (e.g. the Decimal precision syntax) against current docs — this
+// area of the language is still moving.
+
+// ---------------------------------------------------------------------
+// Chats
+// ---------------------------------------------------------------------
+
+model Chat {
+  id             String    @id @default(uuid()) @map("id")
+  userId         String    @map("user_id")
+
+  title          String    @default("New Chat")
+  model          String    @default("claude-sonnet-4-6")
+  systemPrompt   String?   @map("system_prompt")
+  contextSummary String?   @map("context_summary")
+
+  pinned         Boolean   @default(false)
+  archived       Boolean   @default(false)
+
+  meta           Json      @default("{}")
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  messages       Message[]
+
+  @@map("chats")
+}
+
+// ---------------------------------------------------------------------
+// Messages
+// ---------------------------------------------------------------------
+
+model Message {
+  id           String    @id @default(uuid()) @map("id")
+  chatId       String    @map("chat_id")
+
+  // Self-referential — ChatGPT-style edit/regenerate branching later.
+  // NULL for plain linear history.
+  parentId     String?   @map("parent_id")
+
+  role         String    // MessageRole: system | user | assistant | tool
+  content      String
+
+  inputTokens  Int?      @map("input_tokens")
+  outputTokens Int?      @map("output_tokens")
+  creditsCost  Decimal?  @map("credits_cost")
+
+  isError      Boolean   @default(false) @map("is_error")
+  meta         Json      @default("{}")
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  chat         Chat         @relation(fields: [chatId], references: [id])
+  parent       Message?     @relation("MessageReplies", fields: [parentId], references: [id])
+  replies      Message[]    @relation("MessageReplies")
+  attachments  Attachment[]
+
+  @@map("messages")
+}
+
+model Attachment {
+  id        String   @id @default(uuid()) @map("id")
+  messageId String   @map("message_id")
+
+  fileName  String   @map("file_name")
+  fileType  String   @map("file_type")
+  fileUrl   String   @map("file_url")   // e.g. S3 / R2 object URL
+  sizeBytes Int      @map("size_bytes")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message   Message  @relation(fields: [messageId], references: [id])
+
+  @@map("attachments")
+}
+
+// ---------------------------------------------------------------------
+// Credit billing — schema only; payment gateway wiring deferred (see
+// AGENTS.md). CreditWallet is a cached balance; CreditTransaction is the
+// append-only source of truth. Always update both in the same transaction.
+// ---------------------------------------------------------------------
+
+model CreditWallet {
+  userId    String   @id @map("user_id")
+  balance   Decimal  @default("0")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("credit_wallets")
+}
+
+model CreditTransaction {
+  id            String   @id @default(uuid()) @map("id")
+  userId        String   @map("user_id")
+
+  type          String   // signup_grant | topup | usage | refund | adjustment
+  amount        Decimal  // signed
+  balanceAfter  Decimal  @map("balance_after")
+
+  referenceType String?  @map("reference_type") // "message" | "payment" | ...
+  referenceId   String?  @map("reference_id")
+
+  provider      String?  // razorpay | stripe, if this is a topup
+  providerRef   String?  @map("provider_ref")   // payment intent / order id
+
+  meta          Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("credit_transactions")
+}
+
+model PaymentTopup {
+  id                 String    @id @default(uuid()) @map("id")
+  userId             String    @map("user_id")
+
+  provider           String    // razorpay | stripe
+  providerPaymentId  String    @unique @map("provider_payment_id")
+
+  amountFiat         Decimal   @map("amount_fiat")
+  currency           String    @default("USD")
+  creditsPurchased   Decimal   @map("credits_purchased")
+
+  status             String    @default("pending") // pending | succeeded | failed | refunded
+
+  createdAt          DateTime  @default(now()) @map("created_at")
+  completedAt        DateTime? @map("completed_at")
+
+  @@map("payment_topups")
+}

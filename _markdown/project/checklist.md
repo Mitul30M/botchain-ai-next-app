@@ -9,16 +9,16 @@
 - [x] Commit
 
 ## Phase 1 — Database + ORM (do this now, not later)
-- [ ] Create a Neon project, grab both the pooled and direct connection strings
-- [ ] `pnpm add prisma @prisma/client && pnpm dlx prisma init`
-- [ ] Write `schema.prisma`: a lean `User` mirror table (keyed on Kinde's `kindeId`, no
+- [x] Create a Neon project, grab both the pooled and direct connection strings
+- [x] `pnpm add prisma @prisma/client && pnpm dlx prisma init`
+- [x] Write `schema.prisma`: a lean `User` mirror table (keyed on Kinde's `kindeId`, no
       `Account`/`Session`/`VerificationToken` — Kinde handles that) **and** the app
       tables (`Chat`, `Message`, `Attachment`, `CreditWallet`, `CreditTransaction`,
       `PaymentTopup`) — port these from the `schema.py` generated earlier, Prisma
       naming conventions
-- [ ] `pnpm dlx prisma migrate dev --name init`
-- [ ] Confirm tables exist in the Neon dashboard
-- [ ] Use the pooled connection string in `DATABASE_URL`
+- [x] `pnpm dlx prisma migrate dev --name init`
+- [x] Confirm tables exist in the Neon dashboard
+- [x] Use the pooled connection string in `DATABASE_URL`
 
 ## Phase 2 — Auth (Kinde)
 - [ ] Create a Kinde account/app, grab client id/secret + issuer URL

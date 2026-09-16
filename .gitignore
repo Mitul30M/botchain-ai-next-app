@@ -40,3 +40,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .neon
+node_modules/
+dist/
+.env
+
+# .agents
+/.agents
+/.claude
+/.devin
+/.cursor
+
+# neon postgres db and prisma orm
+/migrations
