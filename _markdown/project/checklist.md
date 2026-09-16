@@ -4,9 +4,9 @@
 - [x] `pnpm create next-app@latest botchain-ai-app --yes`
 - [x] `cd botchain-ai-app && pnpm dev` — confirm it boots
 - [x] `git init`, first commit, push to GitHub
-- [ ] `pnpm dlx shadcn@latest init --preset b6ZjlcMy0 --template next`
-- [ ] Drop `AGENTS.md` (below) at repo root
-- [ ] Commit
+- [x] `pnpm dlx shadcn@latest init --preset b6ZjlcMy0 --template next`
+- [x] Drop `AGENTS.md` (below) at repo root
+- [x] Commit
 
 ## Phase 1 — Database + ORM (do this now, not later)
 - [ ] Create a Neon project, grab both the pooled and direct connection strings

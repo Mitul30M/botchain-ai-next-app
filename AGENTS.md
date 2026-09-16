@@ -38,7 +38,7 @@ explicitly asked to.
 ## Database & ORM
 - One Neon project, one database, default `public` schema — no per-feature databases
   or schemas.
-- Prisma is the **only** ORM right now and, pragmatically, owns *every* table for this
+- Prisma 8 is the **only** ORM right now and, pragmatically, owns *every* table for this
   phase. Because auth is handled by Kinde (hosted), there are **no** local
   `Account`/`Session`/`VerificationToken` tables — Kinde manages that state itself.
   Local tables are just:
@@ -48,6 +48,7 @@ explicitly asked to.
     `CreditTransaction`, `PaymentTopup` — ported from the `schema.py` already
     generated for the future FastAPI service, referencing `User.id` (or `kindeId`
     directly — pick one and be consistent).
+    
 - When FastAPI exists later, it will read/write these same tables via SQLAlchemy.
   Migration ownership (stay on Prisma vs. move to Alembic) gets decided then — don't
   pre-solve it now.
