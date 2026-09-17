@@ -16,7 +16,7 @@ export default async function UserLayout({
   const { userId } = await params;
 
   const localUser = await prisma.orm.public.User
-    .where({ kindeId: kindeUser?.id })
+    .where((u) => u.kindeId.eq(kindeUser!.id))
     .first();
 
   if (!localUser || localUser.id !== userId) {

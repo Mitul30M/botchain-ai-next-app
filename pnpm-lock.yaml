@@ -172,9 +172,6 @@ importers:
       '@kinde-oss/kinde-auth-nextjs':
         specifier: ^2.13.1
         version: 2.13.1(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@kinde/management-api-js':
-        specifier: ^0.19.0
-        version: 0.19.0
       '@neon/config':
         specifier: ^1.5.0
         version: 1.5.0
@@ -1380,9 +1377,6 @@ packages:
 
   '@kinde/jwt-validator@0.4.5':
     resolution: {integrity: sha512-oXrLhl4bYUv8TPiKthh23IC6XM5j0paIeKnCpSpHyKLOIowFQhkCx1oml8BZcpEdgn0qo4sIIESReKpp/mLJIA==}
-
-  '@kinde/management-api-js@0.19.0':
-    resolution: {integrity: sha512-vfShriWVNQbzxOJJLAmpPpNXSBGW52lUKEowwlwNQJgMfkemIWg32IqHtTpHWEFeBj7cXUqo4phoE7jKT90d0w==}
 
   '@libsql/client@0.17.4':
     resolution: {integrity: sha512-lYayFWasDV78A+TjlEhr6ubb3odBV6OHjb+wdp8VQcyWWAEIjuwbCHaraEUS4m4yWoo0BvZo96It4VdzZRmRWw==}
@@ -2784,10 +2778,6 @@ packages:
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
-
-  aws-jwt-verify@5.2.1:
-    resolution: {integrity: sha512-J+buA4M+qvQDk58WXFBLkDodkEX3DDL1ac5XFQPW3opxAsaLXYu5hYnlSHsaBRDBUXBAn695kE/cw/mdyJKwJg==}
-    engines: {node: '>=18.0.0'}
 
   aws4fetch@1.0.20:
     resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
@@ -6818,12 +6808,6 @@ snapshots:
       '@kinde/jwt-decoder': 0.2.5
       jsrsasign: 11.1.5
 
-  '@kinde/management-api-js@0.19.0':
-    dependencies:
-      '@kinde/jwt-decoder': 0.2.5
-      aws-jwt-verify: 5.2.1
-      dotenv: 17.4.2
-
   '@libsql/client@0.17.4':
     dependencies:
       '@libsql/core': 0.17.4
@@ -8278,8 +8262,6 @@ snapshots:
   available-typed-arrays@1.0.7:
     dependencies:
       possible-typed-array-names: 1.1.0
-
-  aws-jwt-verify@5.2.1: {}
 
   aws4fetch@1.0.20: {}
 

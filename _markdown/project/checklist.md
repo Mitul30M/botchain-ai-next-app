@@ -21,15 +21,15 @@
 - [x] Use the pooled connection string in `DATABASE_URL`
 
 ## Phase 2 — Auth (Kinde)
-- [ ] Create a Kinde account/app, grab client id/secret + issuer URL
-- [ ] `pnpm add @kinde-oss/kinde-auth-nextjs`
-- [ ] Wire the Kinde callback route + env vars, add sign-in/sign-out buttons
-- [ ] On first login: sync into local `User` table, insert `CreditWallet` + a
+- [x] Create a Kinde account/app, grab client id/secret + issuer URL
+- [x] `pnpm add @kinde-oss/kinde-auth-nextjs`
+- [x] Wire the Kinde callback route + env vars, add sign-in/sign-out buttons
+- [x] On first login: sync into local `User` table, insert `CreditWallet` + a
       `signup_grant` `CreditTransaction` of $5.00 (via Kinde's
       `post-user-registration` webhook, or a get-or-create check on first
       authenticated request)
-- [ ] Middleware to protect authenticated routes
-- [ ] Test the full login → session → protected page loop
+- [x] Middleware to protect authenticated routes
+- [x] Test the full login → session → protected page loop
 
 ## Phase 3 — Chat UI shell (frontend only, real DB, no LLM yet)
 - [ ] Sidebar: list chats per user
