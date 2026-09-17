@@ -169,6 +169,12 @@ importers:
       '@base-ui/react':
         specifier: ^1.8.0
         version: 1.8.0(@date-fns/tz@1.5.0)(@types/react@19.3.0)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@kinde-oss/kinde-auth-nextjs':
+        specifier: ^2.13.1
+        version: 2.13.1(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@kinde/management-api-js':
+        specifier: ^0.19.0
+        version: 0.19.0
       '@neon/config':
         specifier: ^1.5.0
         version: 1.5.0
@@ -1340,6 +1346,43 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@kinde-oss/kinde-auth-nextjs@2.13.1':
+    resolution: {integrity: sha512-dljZNoWSuF0EeEFwmithEHyGLXQxTzEWVLLhzzlrj/xH5pwlbqaRy77n3i8LAJzK75YAQH/+LGnn3e3QRgqoAg==}
+    peerDependencies:
+      next: ^12.3.5 || ~13.0.0 || ~13.1.0 || ~13.2.0 || ^14.2.35 || ^15.0.7 || ^15.1.11 || ^15.2.8 || ^15.3.8 || ^15.4.10 || ^15.5.9 || >=16.0.10
+      react: ^18.0.0 || >=19.2.1
+      react-dom: ^18.0.0 || >=19.2.1
+
+  '@kinde-oss/kinde-auth-react@5.13.0':
+    resolution: {integrity: sha512-VTGou+6ctCm6MkinSVdBXlyciA/jXIYUJfv1S47siR4MJ7EekADuTh37WIExOyE660LOud8/cRxJzW5E4JDttg==}
+    peerDependencies:
+      react: ^17 || ^18 || >=19.2.1
+      react-dom: ^17 || ^18 || >=19.2.1
+
+  '@kinde-oss/kinde-typescript-sdk@2.15.0':
+    resolution: {integrity: sha512-sYb1eSEnjdDd0HXYzp/v9EaYaWUhruIfY1Vlmw+t4J6yaCUT4O//lfVxxGX0EB7uq11SqNwBPCQMCg+7eXYNdA==}
+    engines: {node: '>=20'}
+
+  '@kinde/js-utils@0.31.0':
+    resolution: {integrity: sha512-TJX1ymowYVVodUjgiiqg8YeZO4tOnHfNF+m59UvMYX1PNg46dbbKLVTdpIvIwCm4StTnbjKsRoCSDV6Tw8DBWA==}
+    peerDependencies:
+      expo-secure-store: '>=11.0.0'
+    peerDependenciesMeta:
+      expo-secure-store:
+        optional: true
+
+  '@kinde/js-utils@0.32.0':
+    resolution: {integrity: sha512-rio1Th67SmbYieJSaBi/W+3W6Rf5edoaJ8oR921X+M40EZX0NvzYSu42WyikesPiqCgWlTMu78WbM12hzyvEnQ==}
+
+  '@kinde/jwt-decoder@0.2.5':
+    resolution: {integrity: sha512-du2JjKb560YJCwM1chjkpZBbg6q3v2RX1JfT1Dbhl0QjrmKsWFTZvFja34rdjacps0CjdA4nE3XHPzMDejbg5g==}
+
+  '@kinde/jwt-validator@0.4.5':
+    resolution: {integrity: sha512-oXrLhl4bYUv8TPiKthh23IC6XM5j0paIeKnCpSpHyKLOIowFQhkCx1oml8BZcpEdgn0qo4sIIESReKpp/mLJIA==}
+
+  '@kinde/management-api-js@0.19.0':
+    resolution: {integrity: sha512-vfShriWVNQbzxOJJLAmpPpNXSBGW52lUKEowwlwNQJgMfkemIWg32IqHtTpHWEFeBj7cXUqo4phoE7jKT90d0w==}
 
   '@libsql/client@0.17.4':
     resolution: {integrity: sha512-lYayFWasDV78A+TjlEhr6ubb3odBV6OHjb+wdp8VQcyWWAEIjuwbCHaraEUS4m4yWoo0BvZo96It4VdzZRmRWw==}
@@ -2742,6 +2785,10 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
+  aws-jwt-verify@5.2.1:
+    resolution: {integrity: sha512-J+buA4M+qvQDk58WXFBLkDodkEX3DDL1ac5XFQPW3opxAsaLXYu5hYnlSHsaBRDBUXBAn695kE/cw/mdyJKwJg==}
+    engines: {node: '>=18.0.0'}
+
   aws4fetch@1.0.20:
     resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
 
@@ -3061,6 +3108,10 @@ packages:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
 
+  cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
+    engines: {node: '>=18'}
+
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -3080,6 +3131,10 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  crypto-js@4.2.0:
+    resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
+    deprecated: Active development of CryptoJS has been discontinued. This library is no longer maintained.
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -4176,6 +4231,10 @@ packages:
 
   jsonfile@6.2.1:
     resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
+
+  jsrsasign@11.1.5:
+    resolution: {integrity: sha512-i6mAjey0/4UQmlOaNS2vROl8EkWV8Ei436reJAby2OPQ3lF6uXSs1VYpnM8hndmmCMFIzNc04Uw2GF+0JVLFbg==}
+    deprecated: This package is no longer maintained.
 
   jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
@@ -5399,6 +5458,9 @@ packages:
   unbox-primitive@1.1.0:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
+
+  uncrypto@0.1.3:
+    resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
@@ -6709,6 +6771,58 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@kinde-oss/kinde-auth-nextjs@2.13.1(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@kinde-oss/kinde-auth-react': 5.13.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@kinde-oss/kinde-typescript-sdk': 2.15.0
+      '@kinde/jwt-decoder': 0.2.5
+      '@kinde/jwt-validator': 0.4.5
+      cookie: 1.1.1
+      crypto-js: 4.2.0
+      destr: 2.0.5
+      next: 16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      uncrypto: 0.1.3
+    transitivePeerDependencies:
+      - expo-secure-store
+
+  '@kinde-oss/kinde-auth-react@5.13.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@kinde/js-utils': 0.32.0
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  '@kinde-oss/kinde-typescript-sdk@2.15.0':
+    dependencies:
+      '@kinde/js-utils': 0.31.0
+      '@kinde/jwt-decoder': 0.2.5
+      '@kinde/jwt-validator': 0.4.5
+      uncrypto: 0.1.3
+    transitivePeerDependencies:
+      - expo-secure-store
+
+  '@kinde/js-utils@0.31.0':
+    dependencies:
+      '@kinde/jwt-decoder': 0.2.5
+
+  '@kinde/js-utils@0.32.0':
+    dependencies:
+      '@kinde/jwt-decoder': 0.2.5
+
+  '@kinde/jwt-decoder@0.2.5': {}
+
+  '@kinde/jwt-validator@0.4.5':
+    dependencies:
+      '@kinde/jwt-decoder': 0.2.5
+      jsrsasign: 11.1.5
+
+  '@kinde/management-api-js@0.19.0':
+    dependencies:
+      '@kinde/jwt-decoder': 0.2.5
+      aws-jwt-verify: 5.2.1
+      dotenv: 17.4.2
 
   '@libsql/client@0.17.4':
     dependencies:
@@ -8165,6 +8279,8 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
+  aws-jwt-verify@5.2.1: {}
+
   aws4fetch@1.0.20: {}
 
   axe-core@4.13.0: {}
@@ -8452,6 +8568,8 @@ snapshots:
 
   cookie@0.7.2: {}
 
+  cookie@1.1.1: {}
+
   core-util-is@1.0.3: {}
 
   cors@2.8.6:
@@ -8473,6 +8591,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  crypto-js@4.2.0: {}
 
   cssesc@3.0.0: {}
 
@@ -9726,6 +9846,8 @@ snapshots:
       universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
+
+  jsrsasign@11.1.5: {}
 
   jsx-ast-utils@3.3.5:
     dependencies:
@@ -11154,6 +11276,8 @@ snapshots:
       has-bigints: 1.1.0
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
+
+  uncrypto@0.1.3: {}
 
   undici-types@6.21.0: {}
 

@@ -14,12 +14,42 @@
 // area of the language is still moving.
 
 // ---------------------------------------------------------------------
+// Users
+// ---------------------------------------------------------------------
+// Local mirror of the Kinde user. `id` is OUR Postgres-generated id (what
+// every other table's userId foreign key points at); `kindeId` is Kinde's
+// own id (e.g. "kp_xxx"), kept unique so we can look a user up by it right
+// after login. If you decide later you don't need a separate Postgres id
+// (see AGENTS.md discussion), collapse this to `id = kindeId` and drop the
+// distinction everywhere — but that's a bigger refactor, not a toggle.
+
+model User {
+  id        String   @id @default(uuid()) @map("id")
+  kindeId   String   @unique @map("kinde_id")
+
+  email     String   @unique
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  chats              Chat[]
+  creditTransactions CreditTransaction[]
+  paymentTopups      PaymentTopup[]
+  wallet             CreditWallet?
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------
 // Chats
 // ---------------------------------------------------------------------
 
 model Chat {
   id             String    @id @default(uuid()) @map("id")
   userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id])
 
   title          String    @default("New Chat")
   model          String    @default("claude-sonnet-4-6")
@@ -96,6 +126,7 @@ model Attachment {
 
 model CreditWallet {
   userId    String   @id @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
   balance   Decimal  @default("0")
   updatedAt DateTime @default(now()) @map("updated_at")
 
@@ -105,6 +136,7 @@ model CreditWallet {
 model CreditTransaction {
   id            String   @id @default(uuid()) @map("id")
   userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
 
   type          String   // signup_grant | topup | usage | refund | adjustment
   amount        Decimal  // signed
@@ -125,6 +157,7 @@ model CreditTransaction {
 model PaymentTopup {
   id                 String    @id @default(uuid()) @map("id")
   userId             String    @map("user_id")
+  user               User      @relation(fields: [userId], references: [id])
 
   provider           String    // razorpay | stripe
   providerPaymentId  String    @unique @map("provider_payment_id")
