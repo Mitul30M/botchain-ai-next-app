@@ -10,7 +10,7 @@ export default async function UserLayout({
   params: Promise<{ userId: string }>;
 }) {
   const { isAuthenticated, getUser } = getKindeServerSession();
-  if (!(await isAuthenticated())) redirect("/login");
+  if (!(await isAuthenticated())) redirect("/api/auth/login");
 
   const kindeUser = await getUser();
   const { userId } = await params;

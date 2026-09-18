@@ -9,7 +9,7 @@ export async function GET() {
   const kindeUser = await getUser();
 
   if (!kindeUser?.id || !kindeUser.email) {
-    return NextResponse.redirect(new URL("/login", APP_URL));
+    return NextResponse.redirect(new URL("/api/auth/login", APP_URL));
   }
 
   try {
@@ -44,6 +44,6 @@ export async function GET() {
     );
   } catch (error) {
     console.error("Auth sync failed:", error);
-    return NextResponse.redirect(new URL("/login", APP_URL));
+    return NextResponse.redirect(new URL("/api/auth/login", APP_URL));
   }
 }
