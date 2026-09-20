@@ -32,10 +32,10 @@
 - [x] Test the full login → session → protected page loop
 
 ## Phase 3 — Chat UI shell (frontend only, real DB, no LLM yet)
-- [ ] Sidebar: list chats per user
+- [x] List chats per user (in dashboard)
 - [ ] New chat / rename / soft-delete (`deletedAt`)
-- [ ] Message thread UI (LLM responses can be stubbed/mocked for now)
-- [ ] Wallet balance display (read-only from `CreditWallet`)
+- [x] Message thread UI (LLM responses can be stubbed/mocked for now)
+- [o] Wallet balance display (read-only from `CreditWallet`) (skipped for now)
 
 ## Phase 4 — Deferred (do not start yet)
 - [ ] Decide n8n hosting model (shared instance vs. per-user) — only then create the n8n account and `N8N_API_KEY`

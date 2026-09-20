@@ -13,11 +13,11 @@ export default async function UserDashboardPage({
   const kindeUser = await getUser();
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-col flex-1 items-center justify-center bg-background font-sans">
       route: /users/{userId} 
-      <Link className="text-sm text-blue-500 hover:underline" href={`/`}>Back to the Home Page</Link>
-      <main className="flex flex-1 w-full max-w-6xl flex-col items-center gap-5 py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <h1 className="text-3xl font-semibold leading-10 tracking-tight text-primary dark:text-zinc-50">
+      <Link className="text-sm text-primary hover:underline" href={`/`}>Back to the Home Page</Link>
+      <main className="flex flex-1 w-full max-w-6xl flex-col items-center gap-5 py-32 px-16 bg-card sm:items-start">
+        <h1 className="text-3xl font-semibold leading-10 tracking-tight text-foreground">
           {kindeUser ? (
             `Welcome, ${kindeUser.given_name}`
           ) : (

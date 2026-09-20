@@ -22,13 +22,13 @@ export default async function ChatsPage({
   const kindeUser = await getUser();
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-col flex-1 items-center justify-center bg-background font-sans">
       route: /users/{userId}/chats
-      <Link href={`/users/${userId}`} className="text-sm text-blue-500 hover:underline">
+      <Link href={`/users/${userId}`} className="text-sm text-primary hover:underline">
         Back to Dashboard
       </Link>
-      <main className="flex flex-1 w-full max-w-6xl flex-col items-center gap-5 py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <h1 className="text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+      <main className="flex flex-1 w-full max-w-6xl flex-col items-center gap-5 py-32 px-16 bg-card sm:items-start">
+        <h1 className="text-3xl font-semibold leading-10 tracking-tight text-foreground">
           {kindeUser ? (
             `${kindeUser.given_name}'s Chats`
           ) : (
