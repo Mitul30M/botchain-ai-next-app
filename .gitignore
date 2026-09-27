@@ -52,3 +52,6 @@ dist/
 
 # neon postgres db and prisma orm
 /migrations
+
+# backend context
+/_markdown/backend-context

@@ -7,7 +7,7 @@ export async function getUser(userId: string) {
     .where((u) => u.kindeId.eq(userId))
     .include("chats", (chat) =>
       chat
-        .select("id", "title", "createdAt", "updatedAt", "model")
+        .select("id", "title", "createdAt", "updatedAt", "model", "deletedAt")
         .orderBy((c) => c.createdAt.desc())
     )
     .include("wallet", (w) =>

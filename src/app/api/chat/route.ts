@@ -1,60 +1,117 @@
-import { UIMessage } from "ai";
+import { NextResponse } from "next/server";
+import {
+  BackendUnavailableError,
+  getAccessToken,
+  getBackendUrl,
+  streamThrough,
+} from "@/lib/backend";
 
-export const maxDuration = 30;
+/** Agent builds can run for minutes; Vercel caps a function at 300s by default. */
+export const maxDuration = 300;
 
-const DUMMY_RESPONSE = `Hey there! Welcome to BotChain AI.
+type ChatRequestBody = {
+  chatId?: unknown;
+  messages?: unknown;
+};
 
-This is a placeholder response to verify that the chat UI and streaming pipeline are working correctly. Once the FastAPI backend is wired up with Claude and n8n-mcp, you'll be able to describe automation workflows in plain English and have them built and deployed on your behalf.
+type WireMessage = {
+  role?: unknown;
+  parts?: unknown;
+};
 
-For now, feel free to type anything and watch it stream back. The full flow—Kinde auth, Neon Postgres, and this chat interface—is live and ready for the real thing.`;
+function lastUserContent(messages: unknown): string {
+  if (!Array.isArray(messages)) return "";
 
-function generateId(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+  const userMessage = [...(messages as WireMessage[])]
+    .reverse()
+    .find((message) => message?.role === "user");
+  if (!userMessage || !Array.isArray(userMessage.parts)) return "";
+
+  return userMessage.parts
+    .filter(
+      (part): part is { type: string; text: string } =>
+        !!part &&
+        typeof part === "object" &&
+        (part as { type?: unknown }).type === "text" &&
+        typeof (part as { text?: unknown }).text === "string",
+    )
+    .map((part) => part.text)
+    .join("")
+    .trim();
 }
 
-export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
-  const lastMessage = messages[messages.length - 1];
+function badRequest(message: string) {
+  return NextResponse.json({ error: { message } }, { status: 400 });
+}
 
-  if (!lastMessage) {
-    return new Response("No messages provided", { status: 400 });
+/**
+ * Streams a new user message to the FastAPI backend.
+ *
+ * `DefaultChatTransport` posts `{ chatId, id, messages, trigger, messageId }`;
+ * we forward only the text of the last user message. `parent_id` is
+ * deliberately omitted — `useChat` ids are client-generated, and the backend
+ * rejects a `parent_id` that isn't a real row in the same chat. Omitting it
+ * continues the chat's single thread.
+ */
+export async function POST(request: Request) {
+  let body: ChatRequestBody;
+  try {
+    body = (await request.json()) as ChatRequestBody;
+  } catch {
+    return badRequest("Expected a JSON body.");
   }
 
-  const messageId = generateId();
-  const textId = generateId();
+  const chatId = typeof body.chatId === "string" ? body.chatId : "";
+  if (!chatId) {
+    return badRequest("Missing chatId.");
+  }
 
-  const words = DUMMY_RESPONSE.split(" ");
+  const content = lastUserContent(body.messages);
+  if (!content) {
+    return badRequest("Message content is required.");
+  }
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const enc = new TextEncoder();
-      const send = (line: string) => controller.enqueue(enc.encode(line + "\n\n"));
+  let token: string;
+  try {
+    token = await getAccessToken();
+  } catch {
+    return NextResponse.json(
+      { error: { message: "Not authenticated." } },
+      { status: 401 },
+    );
+  }
 
-      send(`data: ${JSON.stringify({ type: "start", messageId })}`);
-      send(`data: ${JSON.stringify({ type: "text-start", id: textId })}`);
+  let res: Response;
+  try {
+    res = await fetch(
+      `${getBackendUrl()}/api/v1/chats/${encodeURIComponent(chatId)}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content }),
+      },
+    );
+  } catch (cause) {
+    const error = new BackendUnavailableError(
+      `Could not reach the backend at ${getBackendUrl()}. Is it running?`,
+      { cause },
+    );
+    return NextResponse.json(
+      { error: { message: error.message } },
+      { status: 503 },
+    );
+  }
 
-      for (const word of words) {
-        send(
-          `data: ${JSON.stringify({ type: "text-delta", id: textId, delta: word + " " })}`,
-        );
-        await new Promise((r) => setTimeout(r, 30));
-      }
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    return NextResponse.json(
+      { error: { message: detail || res.statusText || "Request failed" } },
+      { status: res.status },
+    );
+  }
 
-      send(`data: ${JSON.stringify({ type: "text-end", id: textId })}`);
-      send(`data: ${JSON.stringify({ type: "finish-step" })}`);
-      send(`data: ${JSON.stringify({ type: "finish" })}`);
-      send("data: [DONE]");
-
-      controller.close();
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-      "x-vercel-ai-ui-message-stream": "v1",
-    },
-  });
+  return streamThrough(res);
 }

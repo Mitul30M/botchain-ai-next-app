@@ -80,9 +80,18 @@ export const VoiceSelector = ({
 
   const [open, setOpen] = useControllableState({
     defaultProp: defaultOpen,
-    onChange: onOpenChange,
     prop: openProp,
   });
+
+  const handleOpenChange = useCallback<
+    NonNullable<ComponentProps<typeof Dialog>["onOpenChange"]>
+  >(
+    (nextOpen, eventDetails) => {
+      setOpen(nextOpen);
+      onOpenChange?.(nextOpen, eventDetails);
+    },
+    [onOpenChange, setOpen]
+  );
 
   const voiceSelectorContext = useMemo(
     () => ({ open, setOpen, setValue, value }),
@@ -91,7 +100,7 @@ export const VoiceSelector = ({
 
   return (
     <VoiceSelectorContext.Provider value={voiceSelectorContext}>
-      <Dialog onOpenChange={setOpen} open={open} {...props}>
+      <Dialog onOpenChange={handleOpenChange} open={open} {...props}>
         {children}
       </Dialog>
     </VoiceSelectorContext.Provider>
