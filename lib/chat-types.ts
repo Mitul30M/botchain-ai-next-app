@@ -120,13 +120,114 @@ export function toUIMessage(message: MessageOut): ChatUIMessage {
   };
 }
 
+/**
+ * Drop raw JSON blocks from assistant text.
+ *
+ * The backend streams the LangGraph `messages` mode, which also carries token
+ * fragments from the agent's internal plan/build/validate calls — so a built
+ * workflow can arrive mid-reply as raw JSON. The persisted row comes from the
+ * last committed assistant message and is clean, so this only ever trims the
+ * live view; applying it at render time also keeps a JSON blob out of the UI if
+ * one was persisted. A block is removed only when it parses as JSON, and a
+ * still-streaming unterminated block is hidden once it clearly opens as JSON.
+ */
+export function stripJsonBlocks(text: string): string {
+  if (!text) return text;
+
+  let out = "";
+  let index = 0;
+
+  while (index < text.length) {
+    const char = text[index];
+    if (char !== "{" && char !== "[") {
+      out += char;
+      index += 1;
+      continue;
+    }
+
+    const end = findBlockEnd(text, index);
+    const block = end === -1 ? text.slice(index) : text.slice(index, end + 1);
+
+    if (end !== -1) {
+      if (parsesAsJson(block)) {
+        index = end + 1;
+        continue;
+      }
+      out += char;
+      index += 1;
+      continue;
+    }
+
+    // Unterminated: hide it while it is recognisably JSON, otherwise keep the
+    // character so ordinary prose containing a brace is not swallowed.
+    if (opensAsJson(block)) break;
+    out += char;
+    index += 1;
+  }
+
+  return out;
+}
+
+function parsesAsJson(block: string): boolean {
+  try {
+    const value: unknown = JSON.parse(block);
+    return typeof value === "object" && value !== null;
+  } catch {
+    return false;
+  }
+}
+
+/** First character after the opener, ignoring whitespace. */
+function opensAsJson(block: string): boolean {
+  const next = block[1]?.trim();
+  return next === '"' || next === "{" || next === "[";
+}
+
+/** Index of the brace/bracket closing the one at `start`, or -1. */
+function findBlockEnd(text: string, start: number): number {
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i += 1) {
+    const char = text[i];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{" || char === "[") {
+      stack.push(char);
+    } else if (char === "}" || char === "]") {
+      const opener = stack.pop();
+      if (!opener) return -1;
+      const matched =
+        (opener === "{" && char === "}") || (opener === "[" && char === "]");
+      if (!matched) return -1;
+      if (stack.length === 0) return i;
+    }
+  }
+
+  return -1;
+}
+
 export function messageText(message: ChatUIMessage): string {
-  return message.parts
-    .filter((part): part is Extract<typeof part, { type: "text" }> =>
-      part.type === "text",
-    )
-    .map((part) => part.text)
-    .join("");
+  return stripJsonBlocks(
+    message.parts
+      .filter((part): part is Extract<typeof part, { type: "text" }> =>
+        part.type === "text",
+      )
+      .map((part) => part.text)
+      .join(""),
+  );
 }
 
 export function lastAssistantMessage(

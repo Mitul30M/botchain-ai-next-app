@@ -34,7 +34,10 @@ import { getBothPlaceholders } from "@/lib/chat-ui-utils";
 import {
   isPendingApproval,
   messageText,
+  stripJsonBlocks,
+  toUIMessage,
   type ChatUIMessage,
+  type MessageOut,
 } from "@/lib/chat-types";
 import { consumeChatStream } from "@/lib/sse";
 import { ApprovalGate } from "./approval-gate";
@@ -99,8 +102,11 @@ export function ChatView({
       { cache: "no-store" },
     );
     if (!res.ok) return null;
-    const { items } = (await res.json()) as { items: ChatUIMessage[] };
-    return items;
+    // The proxy returns raw backend `MessageOut` rows, so they have to go
+    // through `toUIMessage` before `setMessages` — without the `parts` array
+    // the renderer throws on the first `message.parts.map`.
+    const { items } = (await res.json()) as { items: MessageOut[] };
+    return items.map(toUIMessage);
   }, [chatId]);
 
   /**
@@ -307,7 +313,7 @@ export function ChatView({
                                         <MessageResponse
                                           key={`${message.id}-${i}`}
                                         >
-                                          {part.text}
+                                          {stripJsonBlocks(part.text)}
                                         </MessageResponse>
                                       );
                                     default:
@@ -411,7 +417,9 @@ export function ChatView({
                           </div>
                           <Message from="assistant" className="flex-1">
                             <MessageContent>
-                              <MessageResponse>{resumed}</MessageResponse>
+                              <MessageResponse>
+                                {stripJsonBlocks(resumed)}
+                              </MessageResponse>
                             </MessageContent>
                           </Message>
                         </div>
