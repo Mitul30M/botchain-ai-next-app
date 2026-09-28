@@ -14,12 +14,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 BotChain AI: a chat app (Claude-code/ChatGPT-style, multi-chat per user) where users
 talk to an AI agent that builds and manages n8n automation workflows on their behalf,
 using the n8n-mcp tool server. This repo is the **Next.js frontend** only. The FastAPI
-backend, the live n8n-mcp connection, and payment processing do not exist yet — see
-"Current phase" and "Deferred work" before writing code outside the frontend.
+backend lives in a separate repo (`../botchain-ai`) and is **read-only** from here —
+never edit it to make a frontend problem go away. Payment processing still does not
+exist — see "Billing / credits" before writing code outside the frontend.
 
 ## Current phase
-Only the Next.js app + Auth.js + Neon/Prisma exist. No FastAPI service, no LLM calls,
-no live n8n instance, no payment gateway. Don't reach ahead into those unless
+Next.js app + Kinde + Neon/Prisma, talking to the live FastAPI backend over
+`fetchBackend` (`lib/backend.ts`). Chat and message data is owned by the backend; this
+repo reads the chat list via Prisma and sends every chat/message mutation to the
+backend. No live n8n instance, no payment gateway. Don't reach ahead into those unless
 explicitly asked to.
 
 ## Tooling already in place — use it, don't reinvent it
@@ -38,23 +41,32 @@ explicitly asked to.
 ## Database & ORM
 - One Neon project, one database, default `public` schema — no per-feature databases
   or schemas.
-- Prisma 8 is the **only** ORM right now and, pragmatically, owns *every* table for this
-  phase. Because auth is handled by Kinde (hosted), there are **no** local
-  `Account`/`Session`/`VerificationToken` tables — Kinde manages that state itself.
-  Local tables are just:
+- **Ownership is split.** The FastAPI backend owns `chats`, `messages`, `attachments`,
+  and the LangGraph checkpoint/thread state. This repo must only ever **read** those
+  through Prisma (the chat list and chat cards) and **write** them by calling the
+  backend. Never `prisma.orm.public.Chat.create/update/delete` — it will drift from
+  the backend's rows and bypass the ownership check.
+- Prisma is the **only** ORM from this repo, and owns `users`, `credit_wallets`, and
+  `credit_transactions`. Because auth is handled by Kinde (hosted), there are **no**
+  local `Account`/`Session`/`VerificationToken` tables — Kinde manages that state.
   - `User` — a thin mirror row keyed on `kindeId` (Kinde's user `sub`), holding
     whatever app-specific fields we need (email cached for convenience, etc.)
   - the app tables: `Chat`, `Message`, `Attachment`, `CreditWallet`,
     `CreditTransaction`, `PaymentTopup` — ported from the `schema.py` already
     generated for the future FastAPI service, referencing `User.id` (or `kindeId`
     directly — pick one and be consistent).
-    
+
 - When FastAPI exists later, it will read/write these same tables via SQLAlchemy.
   Migration ownership (stay on Prisma vs. move to Alembic) gets decided then — don't
   pre-solve it now.
 - Every schema change goes through `pnpm dlx prisma migrate dev`. Never hand-edit
   tables in the Neon console.
 - Use Neon's **pooled** connection string for `DATABASE_URL` (serverless-safe).
+- Prisma 8 (the RC) is not Prisma 5/6. `db.orm.public.Model.where(fn).delete()` is the
+  delete form and resolves to the removed row or `null`; a mutation without `.where()`
+  is a type error. Confirm syntax in `.agents/skills/prisma-8/` or the generated
+  `src/prisma/contract.d.ts` rather than guessing, and never fall back to raw SQL
+  without asking.
 
 ## Auth — Kinde
 - `@kinde-oss/kinde-auth-nextjs` — hosted auth, not Auth.js/NextAuth. Don't suggest
@@ -81,6 +93,57 @@ explicitly asked to.
   button) instead of wiring a live gateway.
 - Decision already made for when we do wire it: **Razorpay**, not Stripe — chosen for
   UPI/INR support. Don't re-litigate this later without a reason.
+
+## Account deletion
+`KINDE_DELETE_MODE` is **local-only** (`lib/account-lifecycle.ts` — the mode and its
+user-facing copy live together so the dialog can't describe something the action
+doesn't do).
+
+`deleteAccountAction` in `src/app/users/[userId]/actions.ts` runs in this order, and
+the order is the whole design:
+1. Resolve the Kinde session, then the local user via `getUser`. No session or no
+   local row → `redirect("/api/auth/logout")`.
+2. Re-verify the typed confirmation against the user's email **on the server**. The
+   disabled button in the dialog is a convenience, not the check.
+3. `fetchBackend("/api/v1/me/data", { method: "DELETE" })`. On any failure (409, 5xx,
+   backend down) **stop and return the error** — the local row must survive so the
+   user can retry.
+4. Delete the `users` row with Prisma by `id`.
+5. `local-only` stops here; the Kinde identity is intentionally retained, so signing in
+   again mints a fresh empty account via `/api/auth/sync`.
+6. `redirect("/api/auth/logout")` — last, because the `/users/[userId]` layout and
+   `/api/auth/sync` both key off that row and would otherwise rebuild it.
+
+Notes worth keeping:
+- `redirect()` throws. Never wrap it in a `try`/`catch` that swallows it.
+- Never call `getUser`/sync after step 4, or the account reappears.
+- **Never smoke-test this on a real account.** Use a throwaway Kinde signup, and only
+  with the backend running.
+- `full` mode (delete the Kinde identity too) is **not** implemented. It needs a Kinde
+  M2M application, `@kinde/management-api-js`, and the package's real env var names —
+  don't guess them.
+
+## Chat rename & delete
+`renameChatAction` / `deleteChatAction` in
+`src/app/users/[userId]/chats/actions.ts`; UI in `chat-card-menu.tsx`, shared by the
+chat list and the in-chat header.
+- Rename mirrors the backend's 120-char limit locally, but the backend's 422 `detail`
+  is what the user sees if they disagree.
+- Delete treats **404 as success** (already gone) and surfaces a **409** `detail`
+  verbatim, so "a run is still streaming" reads as a wait rather than a breakage.
+- Every action re-authenticates from the session. A `userId` route param is for URLs
+  only — never an authorization input.
+
+## Server-only data helpers vs. Server Functions
+`lib/user.ts` is `import "server-only"`, **not** `"use server"`. A top-of-file
+`"use server"` turns *every* export into a publicly callable endpoint, and `getUser`
+takes an arbitrary id and returns email, chats, and wallet with no auth of its own.
+Callers must resolve the Kinde session first and pass the session's own `sub`.
+
+In a `"use server"` file, **only async functions may be exported** — a shared constant
+will fail the production build with *"Only async functions are allowed to be exported"*,
+which `tsc` and ESLint do not catch. Shared constants go in a plain module:
+`lib/chat-limits.ts`, `lib/account-lifecycle.ts`.
 
 ## n8n / n8n-mcp — deferred to the backend phase
 - Not needed anywhere in this repo right now.
@@ -126,5 +189,9 @@ This section describes a future service. Don't start implementing it in this rep
   only where interactivity requires it.
 - All Prisma access goes through server actions or route handlers — never call Prisma
   from a client component.
+- `pnpm build` is the real gate, not `tsc`/ESLint: the `"use server"` export rule and
+  several bundler-only errors are invisible until it runs. Expect `pnpm lint` to report
+  pre-existing problems in generated files (`src/prisma/contract.d.ts`,
+  `.agents/skills/**`, `components/ai-elements/*`) — check *your* files, not the total.
 - Ship in small, working slices in this order: DB → auth → chat UI shell. Don't jump
   ahead into backend, billing, or n8n work from this repo.

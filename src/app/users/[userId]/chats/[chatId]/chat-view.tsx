@@ -41,6 +41,7 @@ import {
 } from "@/lib/chat-types";
 import { consumeChatStream } from "@/lib/sse";
 import { ApprovalGate } from "./approval-gate";
+import { ChatCardMenu } from "../chat-card-menu";
 import { WorkflowAttachment } from "./workflow-attachment";
 
 const HISTORY_PAGE_SIZE = 100;
@@ -48,6 +49,7 @@ const HISTORY_PAGE_SIZE = 100;
 export type ChatViewProps = {
   userId: string;
   chatId: string;
+  chatTitle: string;
   initialMessages: ChatUIMessage[];
 };
 
@@ -75,6 +77,7 @@ function errorMessageFrom(error: unknown): string {
 export function ChatView({
   userId,
   chatId,
+  chatTitle,
   initialMessages,
 }: ChatViewProps) {
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
@@ -247,13 +250,19 @@ export function ChatView({
   return (
     <section className="flex flex-col items-center justify-center">
       <div className="flex flex-col w-full items-center justify-center bg-background font-sans">
-        route: /users/{userId}/chats/{chatId}
-        <Link
-          href={`/users/${userId}/chats`}
-          className="text-sm text-primary hover:underline"
-        >
-          Back to All Chats
-        </Link>
+        <div className="flex w-full items-center justify-between gap-3">
+          <Link
+            href={`/users/${userId}/chats`}
+            className="text-sm text-primary hover:underline"
+          >
+            Back to All Chats
+          </Link>
+          <ChatCardMenu
+            chatId={chatId}
+            title={chatTitle}
+            redirectTo={`/users/${userId}/chats`}
+          />
+        </div>
       </div>
       <main className="flex flex-1 w-full h-full max-w-6xl flex-col items-center gap-5 mt-10 px-16 sm:items-center">
         <div className="flex w-full flex-col items-center gap-10 py-2 px-16 sm:items-center">

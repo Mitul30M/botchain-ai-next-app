@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { createChatAction } from "./actions";
+import { ChatCardMenu } from "./chat-card-menu";
 import { formatDate } from "@/lib/dates";
 import { getUser } from "@/lib/user";
 
@@ -55,8 +56,9 @@ export default async function ChatsPage({
           <div className="grid grid-cols-3 gap-4 w-full">
             {chats.map((chat) => (
               <Card size="sm" className="" key={chat.id}>
-                <CardHeader>
+                <CardHeader className="flex-row items-start justify-between gap-2">
                   <CardTitle className="text-lg">{chat.title}</CardTitle>
+                  <ChatCardMenu chatId={chat.id} title={chat.title} />
                 </CardHeader>
                 <CardContent>
                   <ul className="grid gap-2 py-2 text-sm font-medium">

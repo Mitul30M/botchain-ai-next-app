@@ -1,7 +1,15 @@
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import Link from "next/link";
+import { DeleteAccountDialog } from "./delete-account-dialog";
 
 export default async function UserDashboardPage({
   params,
@@ -52,6 +60,21 @@ export default async function UserDashboardPage({
             View Chats
           </Button>
         </Link>
+
+        {kindeUser?.email && (
+          <Card className="w-full max-w-2xl">
+            <CardHeader>
+              <CardTitle>Danger zone</CardTitle>
+              <CardDescription>
+                Deleting your account removes every chat, message, attachment,
+                and credit. This cannot be undone.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DeleteAccountDialog email={kindeUser.email} />
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );
