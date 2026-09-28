@@ -372,8 +372,10 @@ export function ChatView({
                                 </AlertTitle>
                                 <AlertDescription>
                                   <ul className="list-disc pl-4">
-                                    {validation.errors.map((err) => (
-                                      <li key={err}>{err}</li>
+                                    {validation.errors.map((err, i) => (
+                                      <li key={`${err.node}-${i}`}>
+                                        {err.message}
+                                      </li>
                                     ))}
                                   </ul>
                                 </AlertDescription>

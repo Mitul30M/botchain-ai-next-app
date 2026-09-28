@@ -45,9 +45,14 @@ export type MessageSpec = {
   open_questions?: string[] | null;
 };
 
+export type MessageValidationError = {
+  node: string;
+  message: string;
+};
+
 export type MessageValidation = {
   status: string;
-  errors: string[];
+  errors: MessageValidationError[];
 };
 
 export type MessageApproval = {

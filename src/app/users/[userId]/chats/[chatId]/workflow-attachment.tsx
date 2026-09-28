@@ -21,7 +21,7 @@ export function WorkflowAttachment({ attachment }: WorkflowAttachmentProps) {
   const size = formatBytes(attachment.size_bytes);
 
   return (
-    <div className="mt-2 flex items-center gap-3 rounded-lg border border-border p-3">
+    <div className="mt-2 self-center flex items-center gap-3 rounded-lg border border-border p-3 max-w-100">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
         <FileJson className="size-4" />
       </span>
@@ -33,6 +33,7 @@ export function WorkflowAttachment({ attachment }: WorkflowAttachmentProps) {
         </p>
       </div>
       <Button
+        nativeButton={false}
         render={<a href={href} download={attachment.file_name} />}
         variant="outline"
         size="sm"

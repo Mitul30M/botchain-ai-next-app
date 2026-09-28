@@ -83,6 +83,7 @@ export function ApprovalGate({
 
   return (
     <Confirmation
+    className="max-w-120 self-center"
       state={state}
       approval={
         pending
