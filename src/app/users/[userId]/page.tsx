@@ -17,6 +17,7 @@ import { ChatListItem } from "./chats/chat-list-item";
 import { MoreChats } from "./chats/more-chats";
 import { createChatAction } from "./chats/actions";
 import { Separator } from "@/components/ui/separator";
+import { ModeToggle } from "@/components/mode-toggle";
 
 /** Chats shown before the rest collapse behind a "Show N more" toggle. */
 const VISIBLE_CHAT_COUNT = 8;
@@ -54,6 +55,7 @@ export default async function UserDashboardPage({
             <Link className="text-sm text-primary hover:underline" href={`/`}>
               Back to the Home Page
             </Link>
+            <ModeToggle />
           </div>
         </div>
       </header>

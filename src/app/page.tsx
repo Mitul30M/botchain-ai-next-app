@@ -10,12 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { LiveSession } from "@/components/landing/live-session";
+import { ModeToggle } from "@/components/mode-toggle";
 import {
   ArrowRight,
   Bot,
@@ -94,7 +95,7 @@ export default async function Home() {
   // rather than linking to `/users/undefined`. Sync mints the row and redirects
   // on to the chats page.
   const dashboardHref = localUser
-    ? `/users/${localUser.id}/chats`
+    ? `/users/${localUser.id}/`
     : "/api/auth/sync";
 
   return (
@@ -114,6 +115,7 @@ export default async function Home() {
           </Link>
 
           <nav className="flex items-center gap-2">
+            <ModeToggle />
             {isLoggedIn ? (
               <>
                 <Link
@@ -145,7 +147,10 @@ export default async function Home() {
       <main className="mx-auto flex w-full flex-1 flex-col gap-6 py-6">
         <div className="grid gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:items-center">
           <div className="flex flex-col gap-4">
-            <Badge variant="secondary" className="w-fit">
+            <Badge
+              variant="secondary"
+              className="w-fit border-chart-1 bg-chart-1/40 text-chart-3"
+            >
               n8n automation, minus the node spaghetti
             </Badge>
             <h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground">
@@ -189,41 +194,10 @@ export default async function Home() {
             </div>
           </div>
 
-          <Card className="bg-card">
-            <CardHeader>
-              <Badge variant="outline" className="w-fit">
-                Live session
-              </Badge>
-              <CardTitle>Enrich new Typeform leads into HubSpot</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1 rounded-md bg-muted px-3 py-2 text-sm text-foreground">
-                <span className="text-xs text-muted-foreground">You</span>
-                <span>
-                  Every new Typeform response should be enriched with the
-                  company domain, then pushed to HubSpot.
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 rounded-md border border-border px-3 py-2 text-sm text-foreground">
-                <span className="text-xs text-muted-foreground">
-                  BotChain AI
-                </span>
-                <span>
-                  Plan: Webhook trigger, HTTP request to enrich, field mapper,
-                  then a HubSpot upsert. Four nodes, one branch.
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
-                <span className="text-xs text-muted-foreground">
-                  Waiting for your approval
-                </span>
-                <Badge variant="secondary">Review</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <LiveSession />
         </div>
 
-        <Separator className="border-accent-foreground my-0" />
+        <Separator className="my-0 bg-chart-1" />
 
         <div className="flex flex-col gap-1 px-4 sm:px-6">
           <h2 className="text-xl font-semibold leading-10 tracking-tight text-foreground">
@@ -236,13 +210,13 @@ export default async function Home() {
 
         <div className="grid gap-4 px-4 sm:px-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((feature) => (
-            <Card key={feature.title} className="hover:bg-muted/40">
+            <Card
+              key={feature.title}
+              className="border-chart-1/60 hover:border-chart-1 hover:bg-chart-1/10"
+            >
               <CardHeader>
-                {/* <span className="flex size-8 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
-                  
-                </span> */}
-                <div className="flex gap-2 w-max">
-                  <feature.icon className="size-4" />
+                <div className="flex w-max gap-2">
+                  <feature.icon className="size-4 text-chart-2" />
                   <CardTitle>{feature.title}</CardTitle>
                 </div>
                 <CardDescription>{feature.body}</CardDescription>
@@ -251,17 +225,17 @@ export default async function Home() {
           ))}
         </div>
 
-        <Separator className="border-accent-foreground my-0" />
+        <Separator className="my-0 bg-chart-1" />
 
         <div className="grid gap-4 px-4 sm:px-6 sm:grid-cols-3">
           {STEPS.map((step, index) => (
-            <Card key={step.title} className="hover:bg-muted/40">
+            <Card
+              key={step.title}
+              className="border-chart-1/60 hover:border-chart-1 hover:bg-chart-1/10"
+            >
               <CardHeader>
-                {/* <Badge variant="secondary" className="w-fit">
-                  Step {index + 1}
-                </Badge> */}
-                <CardTitle className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="w-fit">
+                <CardTitle className="mb-2 flex items-center gap-2">
+                  <Badge className="w-fit border-chart-1 bg-chart-1 text-chart-3">
                     Step {index + 1}
                   </Badge>
                   {step.title}{" "}

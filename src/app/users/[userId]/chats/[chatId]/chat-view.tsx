@@ -42,6 +42,7 @@ import {
 import { consumeChatStream } from "@/lib/sse";
 import { ApprovalGate } from "./approval-gate";
 import { ChatCardMenu } from "../chat-card-menu";
+import { ModeToggle } from "@/components/mode-toggle";
 import { WorkflowAttachment } from "./workflow-attachment";
 import { Separator } from "@/components/ui/separator";
 
@@ -262,11 +263,14 @@ export function ChatView({
             >
               Back to Dashboard
             </Link>
-            <ChatCardMenu
-              chatId={chatId}
-              title={chatTitle}
-              redirectTo={`/users/${userId}/chats`}
-            />
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+              <ChatCardMenu
+                chatId={chatId}
+                title={chatTitle}
+                redirectTo={`/users/${userId}/chats`}
+              />
+            </div>
           </div>
         </div>
       </header>

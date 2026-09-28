@@ -7,6 +7,7 @@ import { createChatAction } from "./actions";
 import { ChatCardMenu } from "./chat-card-menu";
 import { formatDate, toDate } from "@/lib/dates";
 import { getUser } from "@/lib/user";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default async function ChatsPage({
   params,
@@ -37,6 +38,7 @@ export default async function ChatsPage({
             >
               Back to Dashboard
             </Link>
+            <ModeToggle />
           </div>
         </div>
       </header>
