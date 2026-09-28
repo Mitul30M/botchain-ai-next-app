@@ -43,6 +43,7 @@ import { consumeChatStream } from "@/lib/sse";
 import { ApprovalGate } from "./approval-gate";
 import { ChatCardMenu } from "../chat-card-menu";
 import { WorkflowAttachment } from "./workflow-attachment";
+import { Separator } from "@/components/ui/separator";
 
 const HISTORY_PAGE_SIZE = 100;
 
@@ -248,259 +249,261 @@ export function ChatView({
   const statusLine = liveStatus ?? (isLoading || approving ? loadingState : null);
 
   return (
-    <section className="flex flex-col items-center justify-center">
-      <div className="flex flex-col w-full items-center justify-center bg-background font-sans">
-        <div className="flex w-full items-center justify-between gap-3">
-          <Link
-            href={`/users/${userId}/chats`}
-            className="text-sm text-primary hover:underline"
-          >
-            Back to All Chats
-          </Link>
-          <ChatCardMenu
-            chatId={chatId}
-            title={chatTitle}
-            redirectTo={`/users/${userId}/chats`}
-          />
+    <section className="flex w-full items-center flex-1 flex-col border-x border-border bg-background">
+      <header className="sticky top-0 z-20 w-full max-w-5xl border-b border-x border-border bg-background/90 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-2.5 sm:px-6">
+          <p className="text-foreground">
+            route: /users/{userId}/chats/{chatId}
+          </p>
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={`/users/${userId}`}
+              className="text-sm text-primary hover:underline"
+            >
+              Back to Dashboard
+            </Link>
+            <ChatCardMenu
+              chatId={chatId}
+              title={chatTitle}
+              redirectTo={`/users/${userId}/chats`}
+            />
+          </div>
         </div>
-      </div>
-      <main className="flex flex-1 w-full h-full max-w-6xl flex-col items-center gap-5 mt-10 px-16 sm:items-center">
-        <div className="flex w-full flex-col items-center gap-10 py-2 px-16 sm:items-center">
-          <div className="max-w-4xl mx-auto p-4 self-center relative size-full rounded-lg border">
-            <div className="flex flex-col h-162.5">
-              <Conversation>
-                <ConversationContent>
-                  {messages.length === 0 ? (
-                    <ConversationEmptyState
-                      icon={<CupSoda className="size-12 " />}
-                      title={placeholder}
-                      description="Describe the automation you want and the agent will plan it before building anything."
-                    />
-                  ) : (
-                    <>
-                      {messages.map((message) => {
-                        const text = messageText(message);
-                        const isCopied = copiedMessageId === message.id;
-                        const meta = message.metadata;
-                        const messageAttachments = meta?.attachments ?? [];
-                        const hasError = Boolean(meta?.is_error);
-                        const validation = meta?.validation;
-                        const failedValidation =
-                          meta?.approval?.status !== "pending" &&
-                          validation !== undefined &&
-                          validation.status !== "valid" &&
-                          validation.errors.length > 0;
+      </header>
+      <main className="flex w-full flex-1 flex-col px-4 sm:px-6 border-x border-border">
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
+          <div className="flex h-[calc(100dvh-5.5rem)] border border-t-0 border-border flex-col">
+            <Conversation className="min-h-0">
+              <ConversationContent>
+                {messages.length === 0 ? (
+                  <ConversationEmptyState
+                    icon={<CupSoda className="size-12 " />}
+                    title={placeholder}
+                    description="Describe the automation you want and the agent will plan it before building anything."
+                  />
+                ) : (
+                  <>
+                    {messages.map((message) => {
+                      const text = messageText(message);
+                      const isCopied = copiedMessageId === message.id;
+                      const meta = message.metadata;
+                      const messageAttachments = meta?.attachments ?? [];
+                      const hasError = Boolean(meta?.is_error);
+                      const validation = meta?.validation;
+                      const failedValidation =
+                        meta?.approval?.status !== "pending" &&
+                        validation !== undefined &&
+                        validation.status !== "valid" &&
+                        validation.errors.length > 0;
 
-                        return (
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex items-start gap-3 w-full max-w-[95%] ${
+                            message.role === "user"
+                              ? "ml-auto flex-row-reverse"
+                              : ""
+                          }`}
+                        >
                           <div
-                            key={message.id}
-                            className={`flex items-start gap-3 w-full max-w-[95%] ${
+                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                               message.role === "user"
-                                ? "ml-auto flex-row-reverse"
-                                : ""
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-secondary-foreground"
                             }`}
                           >
-                            <div
-                              className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                                message.role === "user"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-secondary text-secondary-foreground"
-                              }`}
-                            >
-                              {message.role === "user" ? (
-                                <User className="size-4 font-semibold" />
-                              ) : (
-                                <Bot className="size-4 font-semibold" />
-                              )}
-                            </div>
-                            <Message from={message.role} className="flex-1">
-                              <MessageContent>
-                                {message.parts.map((part, i) => {
-                                  switch (part.type) {
-                                    case "text":
-                                      return (
-                                        <MessageResponse
-                                          key={`${message.id}-${i}`}
-                                        >
-                                          {stripJsonBlocks(part.text)}
-                                        </MessageResponse>
-                                      );
-                                    default:
-                                      return null;
-                                  }
-                                })}
-                              </MessageContent>
+                            {message.role === "user" ? (
+                              <User className="size-4 font-semibold" />
+                            ) : (
+                              <Bot className="size-4 font-semibold" />
+                            )}
+                          </div>
+                          <Message from={message.role} className="flex-1">
+                            <MessageContent className="text-base leading-relaxed">
+                              {message.parts.map((part, i) => {
+                                switch (part.type) {
+                                  case "text":
+                                    return (
+                                      <MessageResponse
+                                        key={`${message.id}-${i}`}
+                                      >
+                                        {stripJsonBlocks(part.text)}
+                                      </MessageResponse>
+                                    );
+                                  default:
+                                    return null;
+                                }
+                              })}
+                            </MessageContent>
 
-                              {hasError && (
-                                <Alert variant="destructive" className="mt-3">
-                                  <TriangleAlert />
-                                  <AlertTitle>Run failed</AlertTitle>
-                                  <AlertDescription>
-                                    {text ||
-                                      "The agent reported an error for this turn."}
-                                  </AlertDescription>
-                                </Alert>
-                              )}
+                            {hasError && (
+                              <Alert variant="destructive" className="mt-3">
+                                <TriangleAlert />
+                                <AlertTitle>Run failed</AlertTitle>
+                                <AlertDescription>
+                                  {text ||
+                                    "The agent reported an error for this turn."}
+                                </AlertDescription>
+                              </Alert>
+                            )}
 
-                              {meta?.approval && (
-                                <ApprovalGate
-                                  messageId={message.id}
-                                  spec={meta.spec}
-                                  approval={meta.approval}
-                                  busy={approving}
-                                  onApprove={() => void resolveApproval(true)}
-                                  onReject={(feedback) =>
-                                    void resolveApproval(false, feedback)
-                                  }
-                                />
-                              )}
+                            {meta?.approval && (
+                              <ApprovalGate
+                                messageId={message.id}
+                                spec={meta.spec}
+                                approval={meta.approval}
+                                busy={approving}
+                                onApprove={() => void resolveApproval(true)}
+                                onReject={(feedback) =>
+                                  void resolveApproval(false, feedback)
+                                }
+                              />
+                            )}
 
-                              {failedValidation && validation && (
-                                <Alert variant="destructive" className="mt-3">
-                                  <TriangleAlert />
-                                  <AlertTitle>
-                                    Workflow validation failed
-                                  </AlertTitle>
-                                  <AlertDescription>
-                                    <ul className="list-disc pl-4">
-                                      {validation.errors.map((err) => (
-                                        <li key={err}>{err}</li>
-                                      ))}
-                                    </ul>
-                                  </AlertDescription>
-                                </Alert>
-                              )}
+                            {failedValidation && validation && (
+                              <Alert variant="destructive" className="mt-3">
+                                <TriangleAlert />
+                                <AlertTitle>
+                                  Workflow validation failed
+                                </AlertTitle>
+                                <AlertDescription>
+                                  <ul className="list-disc pl-4">
+                                    {validation.errors.map((err) => (
+                                      <li key={err}>{err}</li>
+                                    ))}
+                                  </ul>
+                                </AlertDescription>
+                              </Alert>
+                            )}
 
-                              {messageAttachments.map((attachment) => (
-                                <WorkflowAttachment
-                                  key={attachment.id}
-                                  attachment={attachment}
-                                />
-                              ))}
+                            {messageAttachments.map((attachment) => (
+                              <WorkflowAttachment
+                                key={attachment.id}
+                                attachment={attachment}
+                              />
+                            ))}
 
-                              {message.role === "assistant" && text && (
-                                <div className="mt-2 flex items-center">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger render={<div />}>
-                                        <Button
-                                          size="icon-sm"
-                                          variant="ghost"
-                                          onClick={() =>
-                                            handleCopy(message.id, text)
-                                          }
-                                          className="h-6 w-6"
-                                        >
-                                          {isCopied ? (
-                                            <Check className="size-3" />
-                                          ) : (
-                                            <Copy className="size-3" />
-                                          )}
-                                          <span className="sr-only">
-                                            {isCopied
-                                              ? "Copied!"
-                                              : "Copy message"}
-                                          </span>
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>
+                            {message.role === "assistant" && text && (
+                              <div className="mt-2 flex items-center">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger render={<div />}>
+                                      <Button
+                                        size="icon-sm"
+                                        variant="ghost"
+                                        onClick={() =>
+                                          handleCopy(message.id, text)
+                                        }
+                                        className="h-6 w-6"
+                                      >
+                                        {isCopied ? (
+                                          <Check className="size-3" />
+                                        ) : (
+                                          <Copy className="size-3" />
+                                        )}
+                                        <span className="sr-only">
                                           {isCopied
                                             ? "Copied!"
                                             : "Copy message"}
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              )}
-                            </Message>
-                          </div>
-                        );
-                      })}
-
-                      {resumed && (
-                        <div className="flex items-start gap-3 w-full max-w-[95%]">
-                          <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground">
-                            <Bot className="size-4 font-semibold" />
-                          </div>
-                          <Message from="assistant" className="flex-1">
-                            <MessageContent>
-                              <MessageResponse>
-                                {stripJsonBlocks(resumed)}
-                              </MessageResponse>
-                            </MessageContent>
+                                        </span>
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        {isCopied
+                                          ? "Copied!"
+                                          : "Copy message"}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            )}
                           </Message>
                         </div>
-                      )}
+                      );
+                    })}
 
-                      {statusLine && (
-                        <div className="flex items-start gap-3 w-full max-w-[95%]">
-                          <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground">
-                            <Bot className="size-4" />
-                          </div>
-                          <div className="text-sm text-muted-foreground italic">
-                            {statusLine}
-                          </div>
+                    {resumed && (
+                      <div className="flex items-start gap-3 w-full max-w-[95%]">
+                        <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground">
+                          <Bot className="size-4 font-semibold" />
                         </div>
-                      )}
-                    </>
-                  )}
-                </ConversationContent>
-                <ConversationScrollButton />
-              </Conversation>
+                        <Message from="assistant" className="flex-1">
+                          <MessageContent className="text-base leading-relaxed">
+                            <MessageResponse>
+                              {stripJsonBlocks(resumed)}
+                            </MessageResponse>
+                          </MessageContent>
+                        </Message>
+                      </div>
+                    )}
 
-              {requestError && (
-                <Alert variant="destructive" className="mt-3">
-                  <TriangleAlert />
-                  <AlertTitle>Request failed</AlertTitle>
-                  <AlertDescription className="flex items-center justify-between gap-3">
-                    <span>{requestError}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setRequestError(null);
-                        void regenerate();
-                      }}
-                    >
-                      Retry
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
+                    {statusLine && (
+                      <div className="flex items-start gap-3 w-full max-w-[95%]">
+                        <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground">
+                          <Bot className="size-4" />
+                        </div>
+                        <div className="text-sm text-muted-foreground italic">
+                          {statusLine}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
 
-              <div className="mt-4 w-full max-w-2xl mx-auto relative">
-                <PromptInput
-                  onSubmit={handleSubmit}
-                  className="w-full relative"
-                >
-                  <PromptInputTextarea
-                    placeholder="Describe an automation you want…"
-                    className="pr-12"
-                    disabled={isLoading || approving || awaitingApproval}
-                  />
-                  <PromptInputSubmit
+            {requestError && (
+              <Alert variant="destructive" className="mt-3">
+                <TriangleAlert />
+                <AlertTitle>Request failed</AlertTitle>
+                <AlertDescription className="flex items-center justify-between gap-3">
+                  <span>{requestError}</span>
+                  <Button
+                    size="sm"
                     variant="outline"
-                    status={isLoading || approving ? status : "ready"}
-                    onStop={() => void stop()}
-                    disabled={approving || awaitingApproval}
-                    className="absolute right-4 hover:cursor-pointer"
-                  />
-                </PromptInput>
-              </div>
+                    onClick={() => {
+                      setRequestError(null);
+                      void regenerate();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
 
-              {awaitingApproval && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  This chat is waiting for your approval before the agent can
-                  build the workflow.
-                </p>
-              )}
+            <div className="mt-3 w-full max-w-3xl mx-auto sticky bottom-10 z-20 shrink-0">
+              <PromptInput
+                onSubmit={handleSubmit}
+                className="w-full text-xl relative"
+              >
+                <PromptInputTextarea
+                  placeholder="Describe an automation you want…"
+                  className="pr-12 bg-background text-xl"
+                  disabled={isLoading || approving || awaitingApproval}
+                />
+                <PromptInputSubmit
+                  variant="outline"
+                  status={isLoading || approving ? status : "ready"}
+                  onStop={() => void stop()}
+                  disabled={approving || awaitingApproval}
+                  className="absolute right-4 hover:cursor-pointer"
+                />
+              </PromptInput>
             </div>
+
+            {awaitingApproval && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                This chat is waiting for your approval before the agent can
+                build the workflow.
+              </p>
+            )}
           </div>
         </div>
       </main>
     </section>
   );
 }
-

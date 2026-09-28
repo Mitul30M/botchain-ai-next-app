@@ -31,7 +31,7 @@ const COPY = DELETE_ACCOUNT_COPY["local-only"];
  * Danger zone: type your email to confirm, then purge the account.
  *
  * The typed confirmation is re-checked server-side — matching text here only
- * decides whether the destructive button is enabled, not whether deletion is
+ * decides whether the confirm button is enabled, not whether deletion is
  * allowed. On success the action redirects to logout, so there is no "done"
  * state to render on this side.
  */
@@ -73,15 +73,16 @@ export function DeleteAccountDialog({ email }: DeleteAccountDialogProps) {
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger
         render={
-          <Button variant="destructive">Delete account</Button>
+          <Button variant="outline">
+            <TriangleAlert className="size-4" />
+            Delete account
+          </Button>
         }
-      >
-        Delete account
-      </AlertDialogTrigger>
+      />
 
-      <AlertDialogContent>
+      <AlertDialogContent className="border-border bg-background">
         <AlertDialogHeader>
-          <AlertDialogMedia>
+          <AlertDialogMedia className="text-muted-foreground">
             <TriangleAlert />
           </AlertDialogMedia>
           <AlertDialogTitle>Delete your account?</AlertDialogTitle>
@@ -111,7 +112,10 @@ export function DeleteAccountDialog({ email }: DeleteAccountDialogProps) {
           </div>
 
           {errorMessage && (
-            <p role="alert" className="text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+            >
               {errorMessage}
             </p>
           )}
@@ -128,7 +132,9 @@ export function DeleteAccountDialog({ email }: DeleteAccountDialogProps) {
               render={
                 <Button
                   type="button"
-                  variant="destructive"
+                  // `default` (primary mauve) rather than `destructive`, to
+                  // match the neutral Danger zone card this dialog is launched
+                  // from.
                   // Both guards matter: `matches` stops accidental fires and
                   // `isPending` prevents a double submit.
                   disabled={!matches || isPending}

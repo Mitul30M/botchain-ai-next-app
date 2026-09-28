@@ -1,17 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import Link from "next/link";
 import { createChatAction } from "./actions";
 import { ChatCardMenu } from "./chat-card-menu";
-import { formatDate } from "@/lib/dates";
+import { formatDate, toDate } from "@/lib/dates";
 import { getUser } from "@/lib/user";
 
 export default async function ChatsPage({
@@ -30,18 +24,24 @@ export default async function ChatsPage({
   );
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-background font-sans">
-      route: /users/{userId}/chats
-      <div className="flex w-full max-w-6xl items-center justify-between px-16">
-        <Link href={`/users/${userId}`} className="text-sm text-primary hover:underline">
-          Back to Dashboard
-        </Link>
-        <form action={createChatAction}>
-          <Button type="submit">New Chat</Button>
-        </form>
-      </div>
-      <main className="flex flex-1 w-full max-w-6xl flex-col items-center gap-5 py-32 px-16 bg-card sm:items-start">
-        <h1 className="text-3xl font-semibold leading-10 tracking-tight text-foreground">
+    <section className="flex w-full max-w-6xl self-center border-x border-border flex-1 items-center flex-col">
+      <header className="sticky top-0 z-20 w-full border-b border-border bg-background/90 backdrop-blur-sm">
+        <div className="mx-auto flex w-full flex-col px-4 py-2.5 sm:px-6">
+          <p className="text-xs text-muted-foreground">
+            route: /users/{userId}/chats
+          </p>
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              className="text-sm text-primary hover:underline"
+              href={`/users/${userId}`}
+            >
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto flex w-full flex-1 flex-col gap-6 py-6">
+        <h1 className="text-xl my-0 px-4 sm:px-6 font-semibold leading-10 tracking-tight text-foreground">
           {kindeUser ? (
             `${kindeUser.given_name}'s Chats`
           ) : (
@@ -49,45 +49,60 @@ export default async function ChatsPage({
           )}
         </h1>
         {chats.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <div className="text-sm my-0 px-4 text-center sm:px-6 text-muted-foreground">
+            <form action={createChatAction}>
+              <Button type="submit" className="my-2">
+                New Chat
+              </Button>
+            </form>
             No chats yet. Create one to start planning an automation.
-          </p>
-        ) : (
-          <div className="grid grid-cols-3 gap-4 w-full">
-            {chats.map((chat) => (
-              <Card size="sm" className="" key={chat.id}>
-                <CardHeader className="flex-row items-start justify-between gap-2">
-                  <CardTitle className="text-lg">{chat.title}</CardTitle>
-                  <ChatCardMenu chatId={chat.id} title={chat.title} />
-                </CardHeader>
-                <CardContent>
-                  <ul className="grid gap-2 py-2 text-sm font-medium">
-                    <li className="flex gap-2">
-                      <span>model: {chat.model}</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span>created: {formatDate(chat.createdAt)}</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span>updated: {formatDate(chat.updatedAt)}</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter className="flex-col gap-2">
-                  <Link
-                    href={`/users/${userId}/chats/${chat.id}`}
-                    className="w-full"
-                  >
-                    <Button className="w-full" variant="ghost">
-                      View Chat
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
           </div>
+        ) : (
+          <ul className="flex w-180 self-center flex-col my-0 px-4 sm:px-6 gap-2">
+            <form action={createChatAction} className="self-end">
+              <Button type="submit" className="my-2">
+                New Chat
+              </Button>
+            </form>
+            {chats.map((chat) => (
+              <li key={chat.id}>
+                <Card
+                  size="sm"
+                  className="group gap-0 py-0 transition-colors hover:bg-accent/40"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between gap-3 p-1 px-2">
+                    <Link
+                      href={`/users/${userId}/chats/${chat.id}`}
+                      className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                    >
+                      <span className="block truncate text-[14px] font-medium leading-tight">
+                        {chat.title}
+                      </span>
+                    </Link>
+
+                    <div className="flex shrink-0 items-center gap-4 text-[13px] text-muted-foreground">
+                      <span
+                        className="hidden sm:inline max-w-36 truncate"
+                        title={chat.model ?? undefined}
+                      >
+                        {chat.model}
+                      </span>
+                      <span
+                        className="tabular-nums"
+                        title={toDate(chat.updatedAt)?.toLocaleString() ?? ""}
+                      >
+                        Updated {formatDate(chat.updatedAt)}
+                      </span>
+                    </div>
+
+                    <ChatCardMenu chatId={chat.id} title={chat.title} />
+                  </CardHeader>
+                </Card>
+              </li>
+            ))}
+          </ul>
         )}
       </main>
-    </div>
+    </section>
   );
 }
