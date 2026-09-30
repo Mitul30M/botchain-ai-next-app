@@ -7,6 +7,8 @@ import {
   type Paginated,
 } from "@/lib/chat-types";
 import { ChatView } from "./chat-view";
+import { ChatCardMenu } from "../chat-card-menu";
+import { SiteNav } from "@/components/site-nav";
 
 /** How many messages to seed the thread with on first paint. */
 const HISTORY_PAGE_SIZE = 100;
@@ -38,11 +40,36 @@ export default async function UserChatPage({
   }
 
   return (
-    <ChatView
-      userId={userId}
-      chatId={chatId}
-      chatTitle={chat.title}
-      initialMessages={history.items.map(toUIMessage)}
-    />
+    // This wrapper owns the viewport height for the pair: the nav is
+    // `shrink-0`, and `ChatView`'s section takes the remainder via `flex-1
+    // min-h-0`. Without it the two would stack to `nav + 100dvh` and the page
+    // would scroll by exactly the nav's height.
+    <div className="flex h-dvh flex-col overflow-hidden">
+      {/* Rendered here rather than inside `ChatView` because that component is a
+          client component: an async server component can't be rendered from
+          one. It also keeps the chrome out of the streaming re-renders. */}
+      <SiteNav
+        dashboardHref={`/users/${userId}`}
+        actions={
+          <ChatCardMenu
+            chatId={chatId}
+            title={chat.title}
+            redirectTo={`/users/${userId}/chats`}
+          />
+        }
+        className="z-20 w-full shrink-0 border-x border-t border-b border-border bg-background/90 backdrop-blur-sm"
+      >
+        <span
+          className="truncate text-sm font-medium text-foreground"
+          title={chat.title}
+        >
+          {chat.title}
+        </span>
+      </SiteNav>
+      <ChatView
+        chatId={chatId}
+        initialMessages={history.items.map(toUIMessage)}
+      />
+    </div>
   );
 }

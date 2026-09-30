@@ -9,7 +9,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { TriangleAlert } from "lucide-react";
-import Link from "next/link";
 import { DeleteAccountDialog } from "./delete-account-dialog";
 import { getUser } from "@/lib/user";
 import { toDate } from "@/lib/dates";
@@ -17,7 +16,7 @@ import { ChatListItem } from "./chats/chat-list-item";
 import { MoreChats } from "./chats/more-chats";
 import { createChatAction } from "./chats/actions";
 import { Separator } from "@/components/ui/separator";
-import { ModeToggle } from "@/components/mode-toggle";
+import { SiteNav } from "@/components/site-nav";
 
 /** Chats shown before the rest collapse behind a "Show N more" toggle. */
 const VISIBLE_CHAT_COUNT = 8;
@@ -48,17 +47,12 @@ export default async function UserDashboardPage({
 
   return (
     <section className="flex w-full max-w-6xl self-center border-x border-border flex-1 items-center flex-col">
-      <header className="sticky top-0 z-20 w-full border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex w-full flex-col px-4 py-2.5 sm:px-6">
+      <SiteNav
+        dashboardHref={`/users/${userId}`}
+        above={
           <p className="text-xs text-muted-foreground">route: /users/{userId}</p>
-          <div className="flex items-center justify-between gap-3">
-            <Link className="text-sm text-primary hover:underline" href={`/`}>
-              Back to the Home Page
-            </Link>
-            <ModeToggle />
-          </div>
-        </div>
-      </header>
+        }
+      />
       <main className="mx-auto flex w-full flex-1 flex-col gap-6 py-6">
         <div className="flex w-full flex-col gap-2 px-4 sm:px-6">
           <h1 className="text-2xl font-semibold leading-10 tracking-tight text-foreground">

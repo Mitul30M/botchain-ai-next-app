@@ -1,6 +1,5 @@
 import {
   LoginLink,
-  LogoutLink,
   RegisterLink,
 } from "@kinde-oss/kinde-auth-nextjs/components";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { LiveSession } from "@/components/landing/live-session";
-import { ModeToggle } from "@/components/mode-toggle";
+import { SiteNav } from "@/components/site-nav";
 import {
   ArrowRight,
   Bot,
@@ -100,56 +99,14 @@ export default async function Home() {
 
   return (
     <section className="flex w-full max-w-6xl self-center border-x border-border flex-1 items-center flex-col">
-      <header className="sticky top-0 z-20 w-full border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex w-full items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {/* <span className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Bot className="size-3.5" />
-            </span> */}
-            <span className="text-sm font-semibold text-foreground">
-              BotChain AI
-            </span>
-          </Link>
-
-          <nav className="flex items-center gap-2">
-            <ModeToggle />
-            {isLoggedIn ? (
-              <>
-                <Link
-                  href={dashboardHref}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  Dashboard
-                </Link>
-                <LogoutLink className={buttonVariants({ variant: "outline" })}>
-                  Log out
-                </LogoutLink>
-              </>
-            ) : (
-              <>
-                <LoginLink className={buttonVariants({ variant: "default" })}>
-                  Log in
-                </LoginLink>
-                <RegisterLink
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  Sign up
-                </RegisterLink>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      <SiteNav dashboardHref={dashboardHref} />
 
       <main className="mx-auto flex w-full flex-1 flex-col gap-6 py-6">
         <div className="grid gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:items-center">
           <div className="flex flex-col gap-4">
             <Badge
               variant="secondary"
-              className="w-fit border-chart-1 bg-chart-1/40 text-chart-3"
+              className="w-fit border-chart-1 bg-chart-1/40 text-chart-3 dark:border-chart-3/70 dark:bg-chart-3/20 dark:text-chart-1"
             >
               n8n automation, minus the node spaghetti
             </Badge>

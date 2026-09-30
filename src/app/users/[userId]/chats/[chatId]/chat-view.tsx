@@ -20,6 +20,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -28,10 +33,10 @@ import {
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Bot, Check, Copy, CupSoda, TriangleAlert, User } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBothPlaceholders } from "@/lib/chat-ui-utils";
 import {
+  formatCredits,
   isPendingApproval,
   messageText,
   stripJsonBlocks,
@@ -41,17 +46,25 @@ import {
 } from "@/lib/chat-types";
 import { consumeChatStream } from "@/lib/sse";
 import { ApprovalGate } from "./approval-gate";
-import { ChatCardMenu } from "../chat-card-menu";
-import { ModeToggle } from "@/components/mode-toggle";
 import { WorkflowAttachment } from "./workflow-attachment";
-import { Separator } from "@/components/ui/separator";
 
 const HISTORY_PAGE_SIZE = 100;
 
+/**
+ * Shared styling for the in-message failure cards.
+ *
+ * The `--chart-*` ramp is theme-invariant — `globals.css` declares identical
+ * values under `:root` and `.dark` — so a chart token that reads as dark text
+ * on white would be all but invisible on the dark background. Every foreground
+ * therefore carries an explicit `dark:` partner, and the container color is set
+ * so the `TriangleAlert` icon (which inherits `currentColor`) matches the title.
+ */
+const FAILURE_CARD =
+  "mt-3 w-full max-w-[500px] self-center border-chart-1 bg-chart-1/20 text-chart-5 dark:border-chart-3/60 dark:bg-chart-3/15 dark:text-chart-1";
+const FAILURE_DESCRIPTION = "text-chart-4 dark:text-chart-2";
+
 export type ChatViewProps = {
-  userId: string;
   chatId: string;
-  chatTitle: string;
   initialMessages: ChatUIMessage[];
 };
 
@@ -76,12 +89,127 @@ function errorMessageFrom(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
-export function ChatView({
-  userId,
-  chatId,
-  chatTitle,
-  initialMessages,
-}: ChatViewProps) {
+/** Thousands-separated token count, or a dash when the backend sent no usage. */
+function formatTokens(count: number | null): string {
+  if (typeof count !== "number" || !Number.isFinite(count)) return "—";
+  return count.toLocaleString();
+}
+
+/**
+ * Token/cost breakdown for an assistant message, shown in a hover card on the
+ * copy button.
+ *
+ * The whole card is gated on `hasUsage` in the caller: a message whose usage
+ * columns are all NULL is not worth a hover target, and an empty card would
+ * read as broken data rather than absent data.
+ */
+function MessageUsage({
+  inputTokens,
+  outputTokens,
+  cost,
+}: {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  cost: string | number | null;
+}) {
+  const formattedCost = formatCredits(cost);
+
+  const rows: { label: string; value: string }[] = [
+    { label: "Input tokens", value: formatTokens(inputTokens) },
+    { label: "Output tokens", value: formatTokens(outputTokens) },
+    { label: "Cost", value: formattedCost || "—" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="font-medium text-popover-foreground">Usage</p>
+      <dl className="flex flex-col gap-1">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="flex items-center justify-between gap-4"
+          >
+            <dt className="text-muted-foreground">{row.label}</dt>
+            <dd className="font-mono tabular-nums text-popover-foreground">
+              {row.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+type MessageUsageData = {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  cost: string | number | null;
+};
+
+/**
+ * Copy-message button for an assistant turn, with a usage hover card when the
+ * backend recorded token counts for it.
+ *
+ * The hover card is anchored to a `div` wrapper rather than to the button
+ * itself so the two overlays don't fight over the same trigger: the tooltip
+ * opens below and the card above, so a pointer resting on the button doesn't
+ * have two popovers stacked on one another.
+ */
+function MessageCopyAction({
+  isCopied,
+  onCopy,
+  usage,
+}: {
+  isCopied: boolean;
+  onCopy: () => void;
+  usage: MessageUsageData | null;
+}) {
+  const label = isCopied ? "Copied!" : "Copy message";
+
+  const button = (
+    <Button
+      size="icon-sm"
+      variant="ghost"
+      onClick={onCopy}
+      className="h-6 w-6"
+    >
+      {isCopied ? <Check className="size-3" /> : <Copy className="size-3" />}
+      <span className="sr-only">{label}</span>
+    </Button>
+  );
+
+  const tooltip = (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger render={<div />}>{button}</TooltipTrigger>
+        <TooltipContent>
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
+  return (
+    <div className="mt-2 flex items-center">
+      {usage ? (
+        <HoverCard>
+          <HoverCardTrigger
+            render={<div className="flex items-center" />}
+          >
+            {tooltip}
+          </HoverCardTrigger>
+          <HoverCardContent className="w-56" side="top" sideOffset={8}>
+            <MessageUsage {...usage} />
+          </HoverCardContent>
+        </HoverCard>
+      ) : (
+        tooltip
+      )}
+    </div>
+  );
+}
+
+export function ChatView({ chatId, initialMessages }: ChatViewProps) {
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -250,33 +378,18 @@ export function ChatView({
   const statusLine = liveStatus ?? (isLoading || approving ? loadingState : null);
 
   return (
-    <section className="flex w-full items-center flex-1 flex-col border-x border-border bg-background">
-      <header className="sticky top-0 z-20 w-full max-w-5xl border-b border-x border-border bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-2.5 sm:px-6">
-          <p className="text-foreground">
-            route: /users/{userId}/chats/{chatId}
-          </p>
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              href={`/users/${userId}`}
-              className="text-sm text-primary hover:underline"
-            >
-              Back to Dashboard
-            </Link>
-            <div className="flex items-center gap-2">
-              <ModeToggle />
-              <ChatCardMenu
-                chatId={chatId}
-                title={chatTitle}
-                redirectTo={`/users/${userId}/chats`}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="flex w-full flex-1 flex-col px-4 sm:px-6 border-x border-border">
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
-          <div className="flex h-[calc(100dvh-5.5rem)] border border-t-0 border-border flex-col">
+    // The `SiteNav` above this section owns the top border and the `h-dvh`
+    // wrapper (it lives in the server page, because async server components
+    // can't render from a client one). This section therefore only has to take
+    // the leftover height — `min-h-0` is what actually lets it shrink, and it's
+    // why the wrapper needs the h-dvh rather than this element.
+    <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden border-x border-b border-border bg-background">
+      <main className="flex min-h-0 w-full flex-1 flex-col border-x border-border px-4 sm:px-6">
+        <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+          {/* The nav's real height feeds the flex layout above instead of being
+              guessed in a `calc(100dvh - header)`, so the bordered box ends
+              flush with the viewport. */}
+          <div className="flex min-h-0 flex-1 flex-col border border-t-0 border-border pb-3">
             <Conversation className="min-h-0">
               <ConversationContent>
                 {messages.length === 0 ? (
@@ -294,6 +407,16 @@ export function ChatView({
                       const messageAttachments = meta?.attachments ?? [];
                       const hasError = Boolean(meta?.is_error);
                       const validation = meta?.validation;
+                      /**
+                       * The backend leaves all three usage columns NULL when a
+                       * turn never reached a priced call, so "no data" is the
+                       * signal to skip the hover card entirely.
+                       */
+                      const hasUsage = Boolean(
+                        typeof meta?.input_tokens === "number" ||
+                          typeof meta?.output_tokens === "number" ||
+                          meta?.credits_cost,
+                      );
                       const failedValidation =
                         meta?.approval?.status !== "pending" &&
                         validation !== undefined &&
@@ -341,10 +464,12 @@ export function ChatView({
                             </MessageContent>
 
                             {hasError && (
-                              <Alert variant="destructive" className="mt-3">
+                              <Alert className={FAILURE_CARD}>
                                 <TriangleAlert />
                                 <AlertTitle>Run failed</AlertTitle>
-                                <AlertDescription>
+                                <AlertDescription
+                                  className={FAILURE_DESCRIPTION}
+                                >
                                   {text ||
                                     "The agent reported an error for this turn."}
                                 </AlertDescription>
@@ -365,12 +490,14 @@ export function ChatView({
                             )}
 
                             {failedValidation && validation && (
-                              <Alert variant="destructive" className="mt-3">
+                              <Alert className={FAILURE_CARD}>
                                 <TriangleAlert />
                                 <AlertTitle>
                                   Workflow validation failed
                                 </AlertTitle>
-                                <AlertDescription>
+                                <AlertDescription
+                                  className={FAILURE_DESCRIPTION}
+                                >
                                   <ul className="list-disc pl-4">
                                     {validation.errors.map((err, i) => (
                                       <li key={`${err.node}-${i}`}>
@@ -390,40 +517,21 @@ export function ChatView({
                             ))}
 
                             {message.role === "assistant" && text && (
-                              <div className="mt-2 flex items-center">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger render={<div />}>
-                                      <Button
-                                        size="icon-sm"
-                                        variant="ghost"
-                                        onClick={() =>
-                                          handleCopy(message.id, text)
-                                        }
-                                        className="h-6 w-6"
-                                      >
-                                        {isCopied ? (
-                                          <Check className="size-3" />
-                                        ) : (
-                                          <Copy className="size-3" />
-                                        )}
-                                        <span className="sr-only">
-                                          {isCopied
-                                            ? "Copied!"
-                                            : "Copy message"}
-                                        </span>
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>
-                                        {isCopied
-                                          ? "Copied!"
-                                          : "Copy message"}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
+                              <MessageCopyAction
+                                isCopied={isCopied}
+                                onCopy={() => handleCopy(message.id, text)}
+                                usage={
+                                  hasUsage
+                                    ? {
+                                        inputTokens:
+                                          meta?.input_tokens ?? null,
+                                        outputTokens:
+                                          meta?.output_tokens ?? null,
+                                        cost: meta?.credits_cost ?? null,
+                                      }
+                                    : null
+                                }
+                              />
                             )}
                           </Message>
                         </div>
@@ -481,7 +589,7 @@ export function ChatView({
               </Alert>
             )}
 
-            <div className="mt-3 w-full max-w-3xl mx-auto sticky bottom-10 z-20 shrink-0">
+            <div className="mt-3 w-full max-w-3xl mx-auto z-20 shrink-0">
               <PromptInput
                 onSubmit={handleSubmit}
                 className="w-full text-xl relative"

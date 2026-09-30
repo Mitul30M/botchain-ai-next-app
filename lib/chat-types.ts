@@ -82,6 +82,15 @@ export type MessageOut = {
   is_error: boolean;
   input_tokens: number | null;
   output_tokens: number | null;
+  /**
+   * USD cost of the message, `null` when the turn recorded no token usage
+   * (user messages, and assistant runs that never reached a priced call).
+   *
+   * Typed as `string | number` because the backend declares it `Decimal`, which
+   * Pydantic serializes to a JSON *string* — a plain `number` here would silently
+   * render `$0.00` for a real `$0.075` cost. See `formatCredits`.
+   */
+  credits_cost: string | number | null;
   meta: MessageMeta;
   created_at: string;
   attachments: AttachmentOut[];
@@ -99,6 +108,7 @@ export type ChatUIMessage = UIMessage<
     is_error: boolean;
     input_tokens: number | null;
     output_tokens: number | null;
+    credits_cost: string | number | null;
     created_at: string;
     attachments: AttachmentOut[];
   },
@@ -119,6 +129,7 @@ export function toUIMessage(message: MessageOut): ChatUIMessage {
       is_error: message.is_error,
       input_tokens: message.input_tokens,
       output_tokens: message.output_tokens,
+      credits_cost: message.credits_cost,
       created_at: message.created_at,
       attachments: message.attachments,
     },
@@ -274,4 +285,22 @@ export function formatBytes(bytes: number): string {
   }
   const rounded = value >= 10 || unit === 0 ? Math.round(value) : +value.toFixed(1);
   return `${rounded} ${units[unit]}`;
+}
+
+/**
+ * Render a message's `credits_cost` as USD, or `""` when there is no cost.
+ *
+ * The backend quantizes to 6 decimal places, so a cheap message arrives as
+ * `"0.075000"`. Sub-cent amounts keep enough precision to stay meaningful
+ * (`$0.075`) while anything at or above a cent is trimmed to 2 decimals
+ * (`$0.08`) — a real per-message run cost is normally well under a cent, so
+ * rounding to cents unconditionally would show `$0.00` for most messages.
+ */
+export function formatCredits(cost: string | number | null): string {
+  if (cost === null || cost === undefined || cost === "") return "";
+  const value = typeof cost === "number" ? cost : Number(cost);
+  if (!Number.isFinite(value)) return "";
+  if (value === 0) return "$0.00";
+  const digits = Math.abs(value) < 0.01 ? 4 : 2;
+  return `$${value.toFixed(digits)}`;
 }

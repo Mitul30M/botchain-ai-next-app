@@ -7,7 +7,7 @@ import { createChatAction } from "./actions";
 import { ChatCardMenu } from "./chat-card-menu";
 import { formatDate, toDate } from "@/lib/dates";
 import { getUser } from "@/lib/user";
-import { ModeToggle } from "@/components/mode-toggle";
+import { SiteNav } from "@/components/site-nav";
 
 export default async function ChatsPage({
   params,
@@ -26,22 +26,7 @@ export default async function ChatsPage({
 
   return (
     <section className="flex w-full max-w-6xl self-center border-x border-border flex-1 items-center flex-col">
-      <header className="sticky top-0 z-20 w-full border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex w-full flex-col px-4 py-2.5 sm:px-6">
-          <p className="text-xs text-muted-foreground">
-            route: /users/{userId}/chats
-          </p>
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              className="text-sm text-primary hover:underline"
-              href={`/users/${userId}`}
-            >
-              Back to Dashboard
-            </Link>
-            <ModeToggle />
-          </div>
-        </div>
-      </header>
+      <SiteNav dashboardHref={`/users/${userId}`} />
       <main className="mx-auto flex w-full flex-1 flex-col gap-6 py-6">
         <h1 className="text-xl my-0 px-4 sm:px-6 font-semibold leading-10 tracking-tight text-foreground">
           {kindeUser ? (
