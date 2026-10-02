@@ -55,3 +55,6 @@ dist/
 
 # backend context
 /_markdown/backend-context
+
+# zsh
+*.zsh

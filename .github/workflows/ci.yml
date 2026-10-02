@@ -1,0 +1,118 @@
+name: CI
+
+# Runs on every PR, and on pushes to main so the branch a deploy ships from is
+# always verified.
+#
+# This workflow does NOT deploy anything, and that is deliberate. The frontend
+# Railway service is connected to GitHub directly, with Railway's "Wait for CI"
+# toggle enabled in the service settings. Railway holds each deployment in a
+# WAITING state until every workflow on that commit succeeds, and marks it
+# SKIPPED if one fails -- so the gate is "no green CI, no deploy" without a
+# RAILWAY_TOKEN ever existing in GitHub.
+#
+# The toggle only appears in the dashboard once a workflow with
+# `on: push: branches: [main]` exists on the default branch, so it becomes
+# available after this file is merged.
+#
+# Do NOT add a `railway up` deploy job alongside this. That is how
+# ../botchain-ai does it, and combining the two produces two overlapping
+# deployments per push: the toggle governs Railway's GitHub integration, not
+# the CLI, so both would fire.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref instead of queueing them.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# THROWAWAY placeholders, duplicated from the build stage of the Dockerfile.
+# They are mandatory rather than optional: `src/prisma/db.ts` calls
+# `postgres({ contractJson, url: process.env['DATABASE_URL']! })` at module
+# scope, and that `!` is a compile-time-only claim. `next build` imports route
+# modules, so with DATABASE_URL undefined the import throws. None of these are
+# baked into the runtime image; Railway injects the real values at run time.
+#
+# Duplicating the Dockerfile's block is intentional and fails in the safe
+# direction. A variable added to one and not the other breaks the `build` job
+# loudly and immediately, and the `docker` job below builds the real Dockerfile,
+# which catches the opposite case.
+#
+# `typecheck` inherits these without needing them -- tsc never executes module
+# scope -- but keeping one block avoids a second copy to drift.
+env:
+  DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+  DIRECT_URL: postgresql://build:build@127.0.0.1:5432/build
+  KINDE_CLIENT_ID: build
+  KINDE_CLIENT_SECRET: build
+  KINDE_ISSUER_URL: https://build.invalid
+  KINDE_SITE_URL: http://localhost:3000
+  KINDE_POST_LOGIN_REDIRECT_URL: http://localhost:3000/api/auth/sync
+  KINDE_POST_LOGOUT_REDIRECT_URL: http://localhost:3000
+  BACKEND_URL: http://127.0.0.1:8000
+
+# Action refs are pinned to tags, each confirmed to resolve. These are the same
+# majors ../botchain-ai pins. A floating major here is the class of breakage
+# actionlint cannot catch -- it does not resolve refs over the network -- and
+# `astral-sh/setup-uv@v10` in the backend repo failed at runtime for exactly
+# that reason. Verify a ref with:
+#   curl -fsS -o /dev/null -w '%{http_code}\n' \
+#     https://api.github.com/repos/<owner>/<repo>/git/ref/tags/<ref>   # want 200
+jobs:
+  typecheck:
+    name: Typecheck (tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # pnpm/action-setup reads the `packageManager` field in package.json, so the
+      # pnpm version has exactly one definition in the repo. It must run BEFORE
+      # setup-node, whose `cache: pnpm` shells out to pnpm to resolve the store
+      # path -- the other order silently disables the cache.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # `--frozen-lockfile` so CI fails on a lockfile that disagrees with
+      # package.json, rather than quietly resolving a different dependency tree
+      # than the one the Docker image gets. Which dependency build scripts may
+      # run is governed by onlyBuiltDependencies in .npmrc.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+
+  build:
+    name: Build (next build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  docker:
+    name: Image (docker build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: botchain-ai-next-app:ci
+          # ubuntu runners are amd64, which is also what Railway builds, so this
+          # is the only check that proves the production target architecture
+          # works. A locally built image is arm64 only, and the dep tree pulls
+          # in sharp, rive-app and @xyflow/react -- an arch-specific break in
+          # one of their prebuilt binaries would otherwise surface as a
+          # crash-loop on the first deploy rather than as a red build here.
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
