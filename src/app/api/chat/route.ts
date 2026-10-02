@@ -6,8 +6,13 @@ import {
   streamThrough,
 } from "@/lib/backend";
 
-/** Agent builds can run for minutes; Vercel caps a function at 300s by default. */
-export const maxDuration = 300;
+// There is intentionally no `maxDuration` export here. It only ever applied to
+// Vercel's serverless functions, and this app ships as a long-lived Node
+// process on Railway precisely because a hard 300s kill mid-stream truncated the
+// long agent builds the product depends on. Nothing enforces a ceiling on a
+// stateful server, so re-adding it would advertise a limit that no longer
+// exists. If this is ever deployed to a serverless target, add it back THERE,
+// with a comment naming that platform.
 
 type ChatRequestBody = {
   chatId?: unknown;

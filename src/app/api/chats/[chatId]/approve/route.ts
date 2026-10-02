@@ -6,7 +6,9 @@ import {
   streamThrough,
 } from "@/lib/backend";
 
-export const maxDuration = 300;
+// No `maxDuration` on purpose — see the note in `src/app/api/chat/route.ts`.
+// A serverless-only ceiling would truncate exactly the multi-minute approved
+// build that this route streams.
 
 const MAX_FEEDBACK_LENGTH = 2000;
 

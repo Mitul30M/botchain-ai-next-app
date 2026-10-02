@@ -1,0 +1,29 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+npm-debug.log*
+README.md
+_markdown
+*.tsbuildinfo
+.DS_Store
+.vercel
+
+# ---------------------------------------------------------------------------
+# NOT ignored, on purpose. Do not add these — each one breaks the build:
+#
+# src/prisma/          Prisma 8 contract mode ships contract.json +
+#                      contract.d.ts as committed source, and src/prisma/db.ts
+#                      imports contract.json at module load. Excluding the
+#                      directory yields a build that COMPILES and then throws
+#                      at runtime.
+# pnpm-lock.yaml       the frozen install must match it.
+# pnpm-workspace.yaml  carries the `allowBuilds` allowlist (esbuild,
+#                      msgpackr-extract, workerd).
+# .npmrc               carries the matching `onlyBuiltDependencies`.
+#
+# Dropping either of the last two makes native deps silently unbuildable.
+# ---------------------------------------------------------------------------
