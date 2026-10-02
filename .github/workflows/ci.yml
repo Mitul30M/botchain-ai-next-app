@@ -81,6 +81,24 @@ jobs:
       # than the one the Docker image gets. Which dependency build scripts may
       # run is governed by onlyBuiltDependencies in .npmrc.
       - run: pnpm install --frozen-lockfile
+      # `next typegen` runs FIRST, and this ordering is load-bearing.
+      #
+      # Next 16 exposes route and layout prop types as *globals* rather than
+      # imports: layout.tsx annotates itself `LayoutProps<"/">`, and that name
+      # is generated into .next/types/routes.d.ts. tsconfig includes
+      # ".next/types/**/*.ts", but on a fresh checkout that directory does not
+      # exist and nothing imports the name, so tsc exits 2 with TS2304.
+      #
+      # This passed locally only because a previous `pnpm build` had already
+      # populated .next/. A clean runner has no such history -- which is exactly
+      # how it was caught: the first CI run failed here while build and docker
+      # were green.
+      #
+      # `next typegen` emits those definitions without a full build (~1s), so
+      # the typecheck job stays self-contained rather than depending on an
+      # artifact from the build job. Doing `pnpm build` first would work too,
+      # but would make every typecheck cost a full production build.
+      - run: pnpm exec next typegen
       - run: pnpm exec tsc --noEmit
 
   build:
